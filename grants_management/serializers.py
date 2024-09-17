@@ -112,6 +112,7 @@ class GrantSerializer(serializers.ModelSerializer):
             "reporting_time",
             "created",
             "updated",
+            "number_of_awards",
         ]
 
     def validate(self, data):

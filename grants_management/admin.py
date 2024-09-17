@@ -141,6 +141,7 @@ class GrantsAdmin(admin.ModelAdmin):
         "is_open",
         "created",
         "updated",
+        "number_of_awards",
     )
     search_fields = ("name", "description")
     list_filter = ("name", "description")

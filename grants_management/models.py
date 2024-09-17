@@ -64,6 +64,7 @@ class Grant(models.Model):
         max_length=20, choices=REPORTING_TIME)
     created = models.DateField(auto_now_add=True)  
     updated = models.DateField(auto_now=True)
+    number_of_awards = models.IntegerField(default=0, blank=True, null=True)
     
 
 
