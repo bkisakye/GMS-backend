@@ -1,0 +1,814 @@
+[
+  {
+    "districts": [
+      {
+        "id": 1,
+        "name": "Abim",
+        "region": "North",
+        "size": "2346",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 2,
+        "name": "Adjumani",
+        "region": "North",
+        "size": "2962",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 3,
+        "name": "Agago",
+        "region": "North",
+        "size": "3503",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 4,
+        "name": "Alebtong",
+        "region": "North",
+        "size": "1535",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 5,
+        "name": "Amolatar",
+        "region": "North",
+        "size": "1157",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 6,
+        "name": "Amudat",
+        "region": "North",
+        "size": "1626",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 7,
+        "name": "Amuria",
+        "region": "East",
+        "size": "2578",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 8,
+        "name": "Amuru",
+        "region": "North",
+        "size": "2578",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 9,
+        "name": "Apac",
+        "region": "North",
+        "size": "2947",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 10,
+        "name": "Arua",
+        "region": "North",
+        "size": "4343",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 11,
+        "name": "Budaka",
+        "region": "East",
+        "size": "408",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 12,
+        "name": "Bududa",
+        "region": "East",
+        "size": "316",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 13,
+        "name": "Bugiri",
+        "region": "East",
+        "size": "1038",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 14,
+        "name": "Bugweri",
+        "region": "East",
+        "size": "",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 15,
+        "name": "Buhweju",
+        "region": "East",
+        "size": "748",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 16,
+        "name": "Buikwe",
+        "region": "Central",
+        "size": "1206",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 17,
+        "name": "Bukedea",
+        "region": "East",
+        "size": "1032",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 18,
+        "name": "Bukomansimbi",
+        "region": "Central",
+        "size": "599",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 19,
+        "name": "Bukwa",
+        "region": "East",
+        "size": "524",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 20,
+        "name": "Bulambuli",
+        "region": "East",
+        "size": "693",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 21,
+        "name": "Buliisa",
+        "region": "West",
+        "size": "1108",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 22,
+        "name": "Bundibugyo",
+        "region": "West",
+        "size": "848",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 23,
+        "name": "Bunyangabu",
+        "region": "West",
+        "size": "",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 24,
+        "name": "Bushenyi",
+        "region": "West",
+        "size": "844",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 25,
+        "name": "Busia",
+        "region": "East",
+        "size": "734",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 26,
+        "name": "Butaleja",
+        "region": "East",
+        "size": "653",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 27,
+        "name": "Butambala",
+        "region": "Central",
+        "size": "403",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 28,
+        "name": "Butebo",
+        "region": "East",
+        "size": "",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 29,
+        "name": "Buvuma",
+        "region": "Central",
+        "size": "293",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 30,
+        "name": "Buyende",
+        "region": "East",
+        "size": "1379",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 31,
+        "name": "Dokolo",
+        "region": "North",
+        "size": "1004",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 32,
+        "name": "Gomba",
+        "region": "Central",
+        "size": "1664",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 33,
+        "name": "Gulu",
+        "region": "North",
+        "size": "3433",
+        "size_units": "sq. kms",
+        "townstatus": "true"
+      },
+      {
+        "id": 34,
+        "name": "Hoima",
+        "region": "West",
+        "size": "3671",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 35,
+        "name": "Ibanda",
+        "region": "West",
+        "size": "969",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 36,
+        "name": "Iganga",
+        "region": "East",
+        "size": "1017",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 37,
+        "name": "Isingiro",
+        "region": "West",
+        "size": "2613",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 38,
+        "name": "Jinja",
+        "region": "East",
+        "size": "677",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 39,
+        "name": "Kaabong",
+        "region": "North",
+        "size": "7298",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 40,
+        "name": "Kabale",
+        "region": "West",
+        "size": "1476",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 41,
+        "name": "Kabarole",
+        "region": "West",
+        "size": "2916",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 42,
+        "name": "Kaberamaido",
+        "region": "North",
+        "size": "1750",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 43,
+        "name": "Kagadi",
+        "region": "West",
+        "size": "3225",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 44,
+        "name": "Kakumiro",
+        "region": "West",
+        "size": "2572",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 45,
+        "name": "Kalangala",
+        "region": "Central",
+        "size": "793",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 46,
+        "name": "Kaliro",
+        "region": "East",
+        "size": "825",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 47,
+        "name": "Kampala",
+        "region": "Central",
+        "size": "1899",
+        "size_units": "sq. kms",
+        "townstatus": "true"
+      },
+      {
+        "id": 48,
+        "name": "Kamuli",
+        "region": "East",
+        "size": "1294",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 49,
+        "name": "Kamwenge",
+        "region": "West",
+        "size": "2818",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 50,
+        "name": "Kanungu",
+        "region": "West",
+        "size": "2114",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 51,
+        "name": "Kapchorwa",
+        "region": "East",
+        "size": "1553",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 52,
+        "name": "Karamoja",
+        "region": "North",
+        "size": "4950",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 53,
+        "name": "Kasese",
+        "region": "West",
+        "size": "3687",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 54,
+        "name": "Katakwi",
+        "region": "East",
+        "size": "1393",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 55,
+        "name": "Kazo",
+        "region": "Central",
+        "size": "936",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 56,
+        "name": "Kiboga",
+        "region": "Central",
+        "size": "3664",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 57,
+        "name": "Kibuku",
+        "region": "East",
+        "size": "423",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 58,
+        "name": "Kiruhura",
+        "region": "West",
+        "size": "1142",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 59,
+        "name": "Kiryandongo",
+        "region": "North",
+        "size": "2955",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 60,
+        "name": "Kisoro",
+        "region": "West",
+        "size": "730",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 61,
+        "name": "Kitgum",
+        "region": "North",
+        "size": "3671",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 62,
+        "name": "Koboko",
+        "region": "North",
+        "size": "2768",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 63,
+        "name": "Kyenjojo",
+        "region": "West",
+        "size": "1817",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 64,
+        "name": "Kyegegwa",
+        "region": "West",
+        "size": "1546",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 65,
+        "name": "Kyenjojo",
+        "region": "West",
+        "size": "1843",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 66,
+        "name": "Lira",
+        "region": "North",
+        "size": "2170",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 67,
+        "name": "Luwero",
+        "region": "Central",
+        "size": "1994",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 68,
+        "name": "Lyantonde",
+        "region": "Central",
+        "size": "2337",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 69,
+        "name": "Manafwa",
+        "region": "East",
+        "size": "321",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 70,
+        "name": "Maracha",
+        "region": "North",
+        "size": "2635",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 71,
+        "name": "Masaka",
+        "region": "Central",
+        "size": "3076",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 72,
+        "name": "Masindi",
+        "region": "West",
+        "size": "2783",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 73,
+        "name": "Mayo",
+        "region": "North",
+        "size": "1563",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 74,
+        "name": "Mbale",
+        "region": "East",
+        "size": "2441",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 75,
+        "name": "Mbarara",
+        "region": "West",
+        "size": "2748",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 76,
+        "name": "Mitooma",
+        "region": "West",
+        "size": "803",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 77,
+        "name": "Mityana",
+        "region": "Central",
+        "size": "1312",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 78,
+        "name": "Moroto",
+        "region": "North",
+        "size": "1331",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 79,
+        "name": "Mubende",
+        "region": "Central",
+        "size": "4857",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 80,
+        "name": "Mukono",
+        "region": "Central",
+        "size": "3064",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 81,
+        "name": "Nakapiripirit",
+        "region": "North",
+        "size": "3500",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 82,
+        "name": "Namuswa",
+        "region": "East",
+        "size": "1527",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 83,
+        "name": "Napak",
+        "region": "North",
+        "size": "1558",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 84,
+        "name": "Nebbi",
+        "region": "North",
+        "size": "2677",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 85,
+        "name": "Ngora",
+        "region": "East",
+        "size": "1058",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 86,
+        "name": "Nwoya",
+        "region": "North",
+        "size": "2510",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 87,
+        "name": "Otuke",
+        "region": "North",
+        "size": "1658",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 88,
+        "name": "Oyam",
+        "region": "North",
+        "size": "1622",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 89,
+        "name": "Pader",
+        "region": "North",
+        "size": "2086",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 90,
+        "name": "Pallisa",
+        "region": "East",
+        "size": "1658",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 91,
+        "name": "Rubirizi",
+        "region": "West",
+        "size": "1170",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 92,
+        "name": "Rukungiri",
+        "region": "West",
+        "size": "2084",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 93,
+        "name": "Sembabule",
+        "region": "Central",
+        "size": "3065",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 94,
+        "name": "Sironko",
+        "region": "East",
+        "size": "990",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 95,
+        "name": "Soroti",
+        "region": "East",
+        "size": "2456",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 96,
+        "name": "Ssembabule",
+        "region": "Central",
+        "size": "3065",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 97,
+        "name": "Ssekitoleko",
+        "region": "Central",
+        "size": "2356",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 98,
+        "name": "Tororo",
+        "region": "East",
+        "size": "1851",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 99,
+        "name": "Wakiso",
+        "region": "Central",
+        "size": "2063",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": 100,
+        "name": "Yumbe",
+        "region": "North",
+        "size": "1456",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      },
+      {
+        "id": "101",
+        "name": "Zombo",
+        "region": "North",
+        "size": "940",
+        "size_units": "sq. kms",
+        "townstatus": "false"
+      }
+    ]
+  }
+]

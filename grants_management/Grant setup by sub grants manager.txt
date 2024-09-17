@@ -1,0 +1,16 @@
+Fields for Grant setup - by sub grants manager:
+
+1. Grant title/Name
+2. Grant description.
+3. Grant start and End date (duration/ period)
+4. Application deadline.
+5. Grant category.
+6. Grant Amount.
+7. Status.
+8. Eligibility details.
+9. Number of awards.
+10. Guidelines on funded and non funded administrative and finance criteria.
+11. is_active (*)
+
+
+everything related to a grant ie templates, anything related to the grant before grantee intervention
