@@ -30,7 +30,7 @@ from grants_management.models import (
     FinancialReport,
 
 )
-
+from authentication.models import CustomUser
 from authentication.serializers import CustomUserSerializer
 from subgrantees.models import SubgranteeCategory, District
 from subgrantees.serializers import CustomUserSerializer, SubgranteeProfileSerializer, DistrictSerializer

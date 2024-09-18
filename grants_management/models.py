@@ -202,6 +202,8 @@ class GrantApplicationReview(models.Model):
     comments = models.TextField(blank=True, null=True)
     score = models.IntegerField()
 
+    def __str__(self):
+        return f"Review for {self.application.grant.name} by {self.reviewer.email}"
 
 class FilteredGrantApplicationResponse(models.Model):
     user = models.ForeignKey(

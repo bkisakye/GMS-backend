@@ -27,7 +27,7 @@ from django.db import transaction
 from notifications.models import Notification
 from django.http import Http404
 from django.shortcuts import get_object_or_404
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.pagination import PageNumberPagination
 from .tasks import generate_monthly_financial_report
 from django.http import JsonResponse
