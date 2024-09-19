@@ -436,10 +436,16 @@ def get_all_applications(request):
 
 class GrantApplicationListCreateView(APIView):
 
-    def get_user_applications(self, request, user_id, *args, **kwargs):
-        grant_applications = GrantApplication.objects.filter(user_id=user_id)
-        serializer = GrantApplicationSerializer(grant_applications, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    def get(self, request, user_id, *args, **kwargs):
+        try:
+            # Fetch applications for the given user
+            grant_applications = GrantApplication.objects.filter(
+                subgrantee_id=user_id)
+            serializer = GrantApplicationSerializer(
+                grant_applications, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except GrantApplication.DoesNotExist:
+            return Response({"detail": "User has no applications"}, status=status.HTTP_404_NOT_FOUND)
 
     def post(self, request, *args, **kwargs):
         serializer = GrantApplicationSerializer(data=request.data)
