@@ -28,6 +28,7 @@ from grants_management.models import (
     Requests,
     Extensions,
     FinancialReport,
+    GrantApplicationReviewDocument,
 
 )
 from authentication.models import CustomUser
@@ -254,15 +255,15 @@ class GrantApplicationSerializer(serializers.ModelSerializer):
 class GrantApplicationReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = GrantApplicationReview
-        fields = ['score', 'status', 'comments', 'application', 'reviewer']
+        fields = ['score', 'status', 'comments', 'application', 'reviewer', 'id']
 
 
-def create(self, validated_data):
-    request = self.context.get('request')
-    if request and hasattr(request, 'user'):
-        print("Setting reviewer:", request.user)  # Debug print
-        validated_data['reviewer'] = request.user
-    return super().create(validated_data)
+    def create(self, validated_data):
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            print("Setting reviewer:", request.user)  # Debug print
+            validated_data['reviewer'] = request.user
+        return super().create(validated_data)
 
     def validate(self, data):
         print("Validated data:", data)  # Add this line to debug
@@ -295,6 +296,10 @@ class GrantApplicationDocumentSerializer(serializers.ModelSerializer):
         model = GrantApplicationDocument
         fields = ['application', 'user', 'documents', 'uploaded_at']
 
+class GrantApplicationReviewDocumentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GrantApplicationReviewDocument
+        fields = ['review', 'uploads']
 
 class TransformedGrantApplicationDataSerializer(serializers.Serializer):
     user = CustomUserSerializer(read_only=True)

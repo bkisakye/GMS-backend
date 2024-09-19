@@ -28,7 +28,10 @@ RequestReview,
     Requests,
     Requirements,
     Extensions,
+    GrantApplicationReviewDocument,
 )
+
+admin.site.register(GrantApplicationReviewDocument)
 
 admin.site.register(Extensions)
 
@@ -118,7 +121,7 @@ class SubgranteeCategoryAdmin(admin.ModelAdmin):
 @admin.register(GrantApplication)
 class ApplicationAdmin(admin.ModelAdmin):
     list_display = ("grant", "subgrantee", "status",
-                    "date_submitted", "signed")
+                    "date_submitted", "signed", "reviewed", )
     list_filter = ("status", "date_submitted")
     search_fields = ("grant__name", "subgrantee__name")
 
@@ -173,7 +176,7 @@ class DefaultApplicationQuestionAdmin(admin.ModelAdmin):
 
 @admin.register(GrantApplicationReview)
 class GrantApplicationReviewAdmin(admin.ModelAdmin):
-    list_display = ("application", "reviewer", "status", "score",)
+    list_display = ("application", "reviewer", "status", "score", )
     list_filter = ("status",)
     search_fields = ("application", "reviewer__name",)
 

@@ -261,6 +261,7 @@ def notify_subgrantee_on_review(sender, instance, created, **kwargs):
 
                 # Update grant application status
                 grant_application.status = "complete"
+                grant_application.reviewed = True
                 grant_application.save()
 
             # Prepare and send the email content

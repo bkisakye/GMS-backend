@@ -149,6 +149,7 @@ class GrantApplication(models.Model):
     date_submitted = models.DateTimeField(auto_now_add=True)
     signed = models.BooleanField(default=False)
     last_updated = models.DateTimeField(auto_now=True)
+    reviewed = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.grant.name} - {self.subgrantee}"
@@ -204,6 +205,13 @@ class GrantApplicationReview(models.Model):
 
     def __str__(self):
         return f"Review for {self.application.grant.name} by {self.reviewer.email}"
+
+class GrantApplicationReviewDocument(models.Model):
+    review = models.ForeignKey(GrantApplicationReview, on_delete=models.CASCADE)
+    uploads = models.FileField(upload_to='grant_application_reviews/')
+
+    def __str__(self):
+        return f"Document for Review {self.review.id}"
 
 class FilteredGrantApplicationResponse(models.Model):
     user = models.ForeignKey(

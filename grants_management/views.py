@@ -5,13 +5,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.permissions import IsAdminUser
 import logging
 from django.utils import timezone
-from .serializers import GrantApplicationResponsesSerializer, FilteredGrantApplicationResponseSerializer, BudgetCategorySerializer, ModificationsSerializer, RequestReviewSerializer, ExtensionSerializer, FinancialReportSerializer
+from .serializers import GrantApplicationResponsesSerializer, FilteredGrantApplicationResponseSerializer, BudgetCategorySerializer, ModificationsSerializer, RequestReviewSerializer, ExtensionSerializer, FinancialReportSerializer, GrantApplicationReviewDocumentSerializer
 from .models import CustomUser, Grant, DefaultApplicationQuestion, GrantApplication, GrantApplicationResponses, Notification, Disbursement, Modifications, RequestReview, Extensions
 from rest_framework import permissions, status
 from django.db import transaction, IntegrityError
 from django.core.mail import send_mail
 from .serializers import GrantApplicationResponsesSerializer, GrantSerializer, GrantTypeSerializer, DonorSerializer, DefaultApplicationQuestionSerializer, GrantApplicationSerializer, GrantAccountSerializer, FundingAllocationSerializer, BudgetItemSerializer, ProgressReportSerializer, GrantCloseOutSerializer, GrantCloseOutDocumentsSerializer, RequestsSerializer
-from .models import Grant, GrantType, Donor, DefaultApplicationQuestion, GrantApplicationResponses, GrantApplication, GrantApplicationReview, FilteredGrantApplicationResponse, GrantAccount, FundingAllocation, BudgetCategory, BudgetItem, GrantCloseOut, GrantCloseOutDocuments, Requests, Requirements
+from .models import Grant, GrantType, Donor, DefaultApplicationQuestion, GrantApplicationResponses, GrantApplication, GrantApplicationReview, FilteredGrantApplicationResponse, GrantAccount, FundingAllocation, BudgetCategory, BudgetItem, GrantCloseOut, GrantCloseOutDocuments, Requests, Requirements, GrantApplicationReviewDocument
 from django.shortcuts import render
 from rest_framework import generics, authentication, permissions
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateDestroyAPIView
@@ -486,6 +486,66 @@ class GrantApplicationDetailView(APIView):
         except GrantApplication.DoesNotExist:
             return Response({'detail': 'GrantApplication not found.'}, status=status.HTTP_404_NOT_FOUND)
 
+
+class GrantApplicationReviewDocumentUploadView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def get_user(self, request):
+        try:
+            return CustomUser.objects.get(email=request.user.email)
+        except CustomUser.DoesNotExist:
+            return None
+
+    def post(self, request, review_id=None):
+        if not review_id:
+            return Response({"error": "Review ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            review = GrantApplicationReview.objects.get(id=review_id)
+        except GrantApplicationReview.DoesNotExist:
+            return Response({"error": "Review not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        files = request.FILES.getlist('uploads')
+        if not files:
+            return Response({"error": "No files uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+
+        uploads = []
+        for file in files:
+            upload = GrantApplicationReviewDocument.objects.create(
+                review=review,
+                uploads=file
+            )
+            uploads.append(upload)
+
+        # Create serializer after processing all files
+        serializer = GrantApplicationReviewDocumentSerializer(
+            uploads, many=True)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def get(self, request, review_id=None):
+        if not review_id:
+            return Response({"error": "Review ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            review = GrantApplicationReview.objects.get(id=review_id)
+        except GrantApplicationReview.DoesNotExist:
+            return Response({"error": "Review not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        uploads = GrantApplicationReviewDocument.objects.filter(review=review)
+        serializer = GrantApplicationReviewDocumentSerializer(
+            uploads, many=True)
+        return Response({"uploads": serializer.data}, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_review_for_application(request, application_id):
+    try:
+        review = GrantApplicationReview.objects.get(application=application_id)
+        serializer = GrantApplicationReviewSerializer(review)
+        return Response(serializer.data)
+    except GrantApplicationReview.DoesNotExist:
+        return Response({"error": "Review not found"}, status=status.HTTP_404_NOT_FOUND)
 
 class GrantApplicationDocumentUploadView(APIView):
     permission_classes = [IsAuthenticated]
