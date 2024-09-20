@@ -38,6 +38,7 @@ from decimal import Decimal
 from django.utils.html import strip_tags
 import html
 from django.db.models import Q
+from django.db.models import F
 
 logger = logging.getLogger(__name__)
 
@@ -411,7 +412,6 @@ def create_grant_account_on_complete(sender, instance, created, **kwargs):
                 grant=instance.grant,
                 account_holder=instance.subgrantee,
                 budget_total=budget_total,
-                current_amount=budget_total.budget_total,
             )
 
 
@@ -435,34 +435,49 @@ def notify_on_disbursement(sender, instance, created, **kwargs):
     subgrantee_user = grant_account.account_holder
     action = "credited" if created else "updated"
 
+    if created:
+        new_amount = instance.disbursement_amount
+    else:
+        # Calculate the new disbursement amount
+        original = Disbursement.objects.get(pk=instance.pk)
+        new_amount = instance.disbursement_amount - original.disbursement_amount
+
+    # Update the grant account's current amount
+    grant_account.current_amount += new_amount
+    grant_account.save()
+
     if subgrantee_user:
         try:
-            # Attempt to get the SubgranteeProfile associated with this user
             subgrantee_profile = SubgranteeProfile.objects.get(
                 user=subgrantee_user)
-
-            # Notification for subgrantee
             subgrantee_text = f"Your account for {grant_account.grant.name} has been {action}. Please go ahead and allocate your funds."
 
-            # Use get_or_create to ensure only one notification is created
-            notification, created = Notification.objects.get_or_create(
+            # Create or update notification
+            notifications = Notification.objects.filter(
                 notification_type="grantee",
                 notification_category="disbursement_received",
                 subgrantee=subgrantee_profile,
                 grant=grant_account.grant,
-                defaults={
-                    'text': subgrantee_text
-                }
             )
 
-            # If the notification already existed, update its text
-            if not created:
-                notification.text = subgrantee_text
-                notification.save()
+            if notifications.exists():
+                # Update all matching notifications
+                for notification in notifications:
+                    notification.text = subgrantee_text
+                    notification.save()
+            else:
+                # Create a new notification
+                notification = Notification.objects.create(
+                    notification_type="grantee",
+                    notification_category="disbursement_received",
+                    subgrantee=subgrantee_profile,
+                    grant=grant_account.grant,
+                    text=subgrantee_text
+                )
 
             notification.user.add(subgrantee_user)
 
-            # Email notification
+            # Prepare email content
             subgrantee_html_content = f"""
             <html>
             <body>
@@ -472,13 +487,15 @@ def notify_on_disbursement(sender, instance, created, **kwargs):
                 <h3>Disbursement Details:</h3>
                 <ul>
                     <li><strong>Disbursement Date:</strong> {instance.disbursement_date}</li>
-                    <li><strong>Amount:</strong> {instance.disbursement_amount} UGX</li>
-                    <li><strong>Balance:</strong> {instance.budget_balance} UGX</li>
+                    <li><strong>Amount {'Added' if not created else ''}:</strong> {new_amount} UGX</li>
+                    <li><strong>Total Disbursed:</strong> {instance.disbursement_amount} UGX</li>
+                    <li><strong>Remaining Budget:</strong> {instance.budget_balance} UGX</li>
                 </ul>
                 <p>Thank you for your continued efforts.</p>
             </body>
             </html>
             """
+            # Send the email
             send_formatted_email(
                 subject=f"Disbursement {action.capitalize()} for Grant: {grant_account.grant.name}",
                 html_content=subgrantee_html_content,
@@ -486,7 +503,6 @@ def notify_on_disbursement(sender, instance, created, **kwargs):
             )
 
         except SubgranteeProfile.DoesNotExist:
-            # Handle the case where there's no SubgranteeProfile for this user
             print(
                 f"No SubgranteeProfile found for user: {subgrantee_user.email}")
 

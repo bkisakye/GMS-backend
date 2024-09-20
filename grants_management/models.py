@@ -246,7 +246,7 @@ class GrantAccount(models.Model):
     account_holder = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     budget_total = models.ForeignKey(BudgetTotal, on_delete=models.CASCADE)
-    current_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    current_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=50, choices=[
         ('active', 'Active'),
@@ -492,7 +492,7 @@ class ProgressReport(models.Model):
 
 class Disbursement(models.Model):
     grant_account = models.ForeignKey(
-        GrantAccount, on_delete=models.CASCADE, related_name='disbursements')
+        GrantAccount, on_delete=models.CASCADE, related_name='disbursements')    
     disbursement_amount = models.DecimalField(max_digits=10, decimal_places=2)
     budget_balance = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True)
