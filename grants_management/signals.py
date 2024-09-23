@@ -416,18 +416,23 @@ def create_grant_account_on_complete(sender, instance, created, **kwargs):
 
 
 @receiver(post_save, sender=FundingAllocation)
-def update_grant_account(sender, instance, **kwargs):
+def update_grant_account(sender, instance, created, **kwargs):
     grant_account = instance.grant_account
-    grant_account.current_amount -= instance.amount
-    grant_account.save()
-
-
-@receiver(post_save, sender=FundingAllocation)
-def update_budget_items(sender, instance, **kwargs):
     budget_item = instance.item
-    budget_item.amount -= instance.amount
-    budget_item.save()
 
+    if created:  # Handle creation
+        grant_account.current_amount -= instance.amount
+        budget_item.amount -= instance.amount
+    else:  # Handle update
+        previous_instance = FundingAllocation.objects.get(pk=instance.pk)
+        amount_difference = instance.amount - previous_instance.amount
+
+        grant_account.current_amount -= amount_difference
+        budget_item.amount -= amount_difference
+
+    # Save the updated grant account and budget item
+    grant_account.save()
+    budget_item.save()
 
 @receiver(post_save, sender=Disbursement)
 def notify_on_disbursement(sender, instance, created, **kwargs):

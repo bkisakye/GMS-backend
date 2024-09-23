@@ -216,6 +216,7 @@ class BudgetItemSerializer(serializers.ModelSerializer):
 class FundingAllocationSerializer(serializers.ModelSerializer):
     item = serializers.PrimaryKeyRelatedField(
         queryset=BudgetItem.objects.all())
+        
 
     class Meta:
         model = FundingAllocation
@@ -232,6 +233,16 @@ class FundingAllocationSerializer(serializers.ModelSerializer):
         if 'item' in validated_data:
             instance.grant_account = validated_data['item'].grant_account
         return super().update(instance, validated_data)
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['item'] = BudgetItemSerializer(
+            instance.item).data
+        return representation
+
+    item = serializers.PrimaryKeyRelatedField(
+        queryset=BudgetItem.objects.all())
+
 
 class DefaultApplicationQuestionSerializer(serializers.ModelSerializer):
     section = SectionSerializer(read_only=True)
