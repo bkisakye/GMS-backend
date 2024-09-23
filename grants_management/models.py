@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from django.utils import timezone
 from authentication.models import CustomUser
 from subgrantees.models import SubgranteeProfile
@@ -355,6 +355,7 @@ class BudgetItem(models.Model):
             raise ValidationError(
                 "Budget item exceeds the grant's total budget.")
 
+    @transaction.atomic
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
