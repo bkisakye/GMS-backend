@@ -119,37 +119,39 @@ def notify_grantees_on_grant_creation(sender, instance, created, **kwargs):
             logger.error(f"Error sending email notification: {e}")
 
 
-@receiver(post_save, sender=GrantApplication)
+@receiver(post_save, sender=GrantApplicationDocument)
 def notify_admin_on_grant_application(sender, instance, created, **kwargs):
     if created:
+        # Fetching the admins
         admin_users = CustomUser.objects.filter(is_staff=True)
 
+        # Creating the notification object
         notification = Notification.objects.create(
             notification_type='admin',
             notification_category='grant_application',
-            text=f"A new grant application has been submitted by {instance.subgrantee.organisation_name} for the grant: {instance.grant.name}.",
-            application=instance,
+            text=f"A new grant application has been submitted by {instance.user.organisation_name} for the grant: {instance.application.grant.name}.",
         )
 
-
-        admin_users = CustomUser.objects.filter(is_staff=True)
+        # Attaching users to the notification
         notification.user.set(admin_users)
 
+        # Sending email notification to admins
         email_list = [admin.email for admin in admin_users]
         html_content = f"""
-                <html>
-                <body>
-                <h2>Grant Application</h2>
-                <p>An application for grant {html.escape(instance.grant.name)} has been submitted by {html.escape(instance.subgrantee.organisation_name)} </p>
-                <p>Please login and review it..</p>
-                </body>
-                </html>
-                """
+            <html>
+            <body>
+            <h2>Grant Application</h2>
+            <p>An application for grant {html.escape(instance.application.grant.name)} has been submitted by {html.escape(instance.user.organisation_name)}</p>
+            <p>Please login and review it.</p>
+            </body>
+            </html>
+        """
         send_formatted_email(
-            subject=f"Grant Application",
+            subject="Grant Application",
             html_content=html_content,
             recipient_list=email_list
         )
+
 
 
 
