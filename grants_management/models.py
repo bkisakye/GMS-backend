@@ -138,7 +138,7 @@ class GrantApplication(models.Model):
         ("under_review", "Under Review"),
         ("approved", "Approved"),
         ("rejected", "Rejected"),
-        ("negotiation", "Negotiation"),
+        ("negotiate", "Negotiate"),
     ]
 
     subgrantee = models.ForeignKey(
