@@ -121,7 +121,7 @@ class SubgranteeCategoryAdmin(admin.ModelAdmin):
 @admin.register(GrantApplication)
 class ApplicationAdmin(admin.ModelAdmin):
     list_display = ("grant", "subgrantee", "status",
-                    "date_submitted", "signed", "reviewed", )
+                    "date_submitted", "signed", "reviewed", "updated",)
     list_filter = ("status", "date_submitted")
     search_fields = ("grant__name", "subgrantee__name")
 

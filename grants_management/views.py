@@ -298,7 +298,9 @@ class GrantApplicationResponsesAPIView(APIView):
                 application, created = GrantApplication.objects.get_or_create(
                     subgrantee=user,
                     grant=grant,
-                    defaults={'status': 'pending'}
+                    defaults={'status': 'under_review',
+                    'updated': False
+                    }
                 )
 
                 for answer in answers:
@@ -323,9 +325,9 @@ class GrantApplicationResponsesAPIView(APIView):
                 logger.debug(f"Answered questions: {answered_questions}")
 
                 if set(all_questions) == set(answered_questions):
-                    application.status = 'completed'
+                    application.status = 'under_review'
                 else:
-                    application.status = 'pending'
+                    application.status = 'under_review'
 
                 application.last_updated = timezone.now()
                 application.save()
@@ -362,7 +364,10 @@ class GrantApplicationResponsesAPIView(APIView):
                 application, created = GrantApplication.objects.get_or_create(
                     subgrantee=user,
                     grant=grant,
-                    defaults={'status': 'pending'}
+                    defaults={
+                        'status': 'under_review'
+                        
+                    }
                 )
 
                 for answer in answers:
@@ -385,11 +390,12 @@ class GrantApplicationResponsesAPIView(APIView):
                 logger.debug(f"Answered questions: {answered_questions}")
 
                 if set(all_questions) == set(answered_questions):
-                    application.status = 'completed'
+                    application.status = 'under_review'
                 else:
-                    application.status = 'pending'
+                    application.status = 'under_review'
 
                 application.last_updated = timezone.now()
+                application.updated = True
                 application.save()
 
         except Grant.DoesNotExist:
@@ -463,6 +469,7 @@ class GrantApplicationCountView(APIView):
 
 class GrantApplicationDetailView(APIView):
     permission_classes = [IsAuthenticated]
+
     def get(self, request, pk, *args, **kwargs):
 
         try:
@@ -491,6 +498,8 @@ class GrantApplicationDetailView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except GrantApplication.DoesNotExist:
             return Response({'detail': 'GrantApplication not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+
 
 
 class GrantApplicationReviewDocumentUploadView(APIView):
@@ -621,7 +630,13 @@ class GrantApplicationReviewListCreateAPIView(APIView):
         serializer = GrantApplicationReviewSerializer(
             data=request.data, context={'request': request})
         if serializer.is_valid():
-            serializer.save()
+            review = serializer.save()
+            # Update the application status and set reviewed to True
+            application = review.application
+            application.status = review.status  # Set application status to review status
+            # Assuming you have a 'reviewed' field in GrantApplication
+            application.reviewed = True
+            application.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -634,7 +649,14 @@ class GrantApplicationReviewListCreateAPIView(APIView):
         serializer = GrantApplicationReviewSerializer(
             review, data=request.data, partial=True)
         if serializer.is_valid():
-            serializer.save()
+            updated_review = serializer.save()
+            # Update the application status and set reviewed to True
+            application = updated_review.application
+            # Set application status to updated review status
+            application.status = updated_review.status
+            # Assuming you have a 'reviewed' field in GrantApplication
+            application.reviewed = True
+            application.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

@@ -133,9 +133,12 @@ class GrantApplicationResponses(models.Model):
 
 
 class GrantApplication(models.Model):
-    STATUS_CHOICES = [
-        ("pending", "Pending"),
-        ("complete", "Complete"),
+
+    REVIEW_STATUS = [
+        ("under_review", "Under Review"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+        ("negotiation", "Negotiation"),
     ]
 
     subgrantee = models.ForeignKey(
@@ -145,14 +148,14 @@ class GrantApplication(models.Model):
         "Grant", on_delete=models.CASCADE, related_name="grant_management"
     )
     status = models.CharField(
-        max_length=100, choices=STATUS_CHOICES, default="pending")
+        max_length=100, choices=REVIEW_STATUS, default="under_review")
     date_submitted = models.DateTimeField(auto_now_add=True)
     signed = models.BooleanField(default=False)
+    updated = models.BooleanField(default=False)
     last_updated = models.DateTimeField(auto_now=True)
     reviewed = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"{self.grant.name} - {self.subgrantee}"
+    last_review_date = models.DateTimeField(null=True, blank=True)
+    last_response_date = models.DateTimeField(null=True, blank=True)
 
 
     @classmethod
@@ -202,6 +205,7 @@ class GrantApplicationReview(models.Model):
     ], default='pending')
     comments = models.TextField(blank=True, null=True)
     score = models.IntegerField()
+
 
     def __str__(self):
         return f"Review for {self.application.grant.name} by {self.reviewer.email}"

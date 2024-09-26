@@ -1,4 +1,4 @@
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.core.mail import send_mail
 from django.conf import settings
@@ -39,6 +39,7 @@ from django.utils.html import strip_tags
 import html
 from django.db.models import Q
 from django.db.models import F
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -121,38 +122,49 @@ def notify_grantees_on_grant_creation(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=GrantApplicationDocument)
 def notify_admin_on_grant_application(sender, instance, created, **kwargs):
+    # Fetching the admins
+    admin_users = CustomUser.objects.filter(is_staff=True)
+
+    # Determine the notification message based on creation or update
     if created:
-        # Fetching the admins
-        admin_users = CustomUser.objects.filter(is_staff=True)
-
-        # Creating the notification object
-        notification = Notification.objects.create(
-            notification_type='admin',
-            notification_category='grant_application',
-            text=f"A new grant application has been submitted by {instance.user.organisation_name} for the grant: {instance.application.grant.name}.",
+        message_type = "submitted"
+        notification_text = (
+            f"A new grant application has been submitted by {instance.user.organisation_name} "
+            f"for the grant: {instance.application.grant.name}."
+        )
+    else:
+        message_type = "updated"
+        notification_text = (
+            f"The grant application submitted by {instance.user.organisation_name} "
+            f"for the grant: {instance.application.grant.name} has been updated."
         )
 
-        # Attaching users to the notification
-        notification.user.set(admin_users)
+    # Creating the notification object
+    notification = Notification.objects.create(
+        notification_type='admin',
+        notification_category='grant_application',
+        text=notification_text,
+    )
 
-        # Sending email notification to admins
-        email_list = [admin.email for admin in admin_users]
-        html_content = f"""
-            <html>
-            <body>
-            <h2>Grant Application</h2>
-            <p>An application for grant {html.escape(instance.application.grant.name)} has been submitted by {html.escape(instance.user.organisation_name)}</p>
-            <p>Please login and review it.</p>
-            </body>
-            </html>
-        """
-        send_formatted_email(
-            subject="Grant Application",
-            html_content=html_content,
-            recipient_list=email_list
-        )
+    # Attaching users to the notification
+    notification.user.set(admin_users)
 
-
+    # Sending email notification to admins
+    email_list = [admin.email for admin in admin_users]
+    html_content = f"""
+        <html>
+        <body>
+        <h2>Grant Application {message_type.capitalize()}</h2>
+        <p>{html.escape(notification_text)}</p>
+        <p>Please login and review it.</p>
+        </body>
+        </html>
+    """
+    send_formatted_email(
+        subject=f"Grant Application {message_type.capitalize()}",
+        html_content=html_content,
+        recipient_list=email_list
+    )
 
 
 @receiver(post_save, sender=GrantApplicationResponses)
@@ -238,52 +250,76 @@ def transform_responses(sender, instance, **kwargs):
         logger.error(f"Error transforming responses: {e}")
 
 
+@receiver(post_save, sender=GrantApplication)
+def create_grant_account_on_complete(sender, instance, created, **kwargs):
+    if not created and instance.status == "approved":
+        if not GrantAccount.objects.filter(
+            grant=instance.grant, account_holder=instance.subgrantee
+        ).exists():
+            budget_total = BudgetTotal.objects.filter(
+                grant=instance.grant, application=instance, user=instance.subgrantee
+            ).first()
+            if not budget_total:
+                logger.error(
+                    f"No BudgetTotal found for grant ID {instance.grant.id}")
+                return
+            GrantAccount.objects.create(
+                grant=instance.grant,
+                account_holder=instance.subgrantee,
+                budget_total=budget_total,
+            )
+
+
 @receiver(post_save, sender=GrantApplicationReview)
 def notify_subgrantee_on_review(sender, instance, created, **kwargs):
-    if created:
-        grant_application = instance.application
-        user = grant_application.subgrantee
+    with transaction.atomic():
+        print("Inside notify_subgrantee_on_review")
+        if created:
+            grant_application = instance.application
+            user = grant_application.subgrantee
+            print(
+                f"Before update: Application {grant_application.id} reviewed = {grant_application.reviewed}")
+            if user:
+                notification_text = f"Your grant application for '{grant_application.grant.name}' has been {instance.status}. "
+                if instance.status == "approved":
+                    notification_text += "Please proceed to create your budget."
+                    
+                elif instance.status == "rejected":
+                    notification_text += "Thank you for your application."
+                    
+                elif instance.status == "negotiate":
+                    notification_text += "Please review the feedback and respond accordingly."
+                    
 
-        if user:
-            if instance.status == "approved":
-                # Prepare notification text
-                notification_text = (
-                    f"Your grant application for '{grant_application.grant.name}' has been {instance.status}. "
-                    "Please proceed to create your budget."
-                )
-
-                # Create and save the notification
                 notification = Notification.objects.create(
                     notification_type='grantee',
                     notification_category='grant_review',
                     text=notification_text
                 )
-                # Assuming this is a ManyToManyField, otherwise use `notification.user = user`
                 notification.user.add(user)
                 notification.save()
 
-                # Update grant application status
-                grant_application.status = "complete"
-                grant_application.reviewed = True
-                grant_application.save()
 
-            # Prepare and send the email content
-            html_content = f"""
-            <html>
-            <body>
-            <h2>Grant Application Review</h2>
-            <p>Dear {html_escape(user.organisation_name)},</p>
-            <p>Your application for grant {html_escape(grant_application.grant.name)} has been reviewed.</p>
-            <p>{'Please login to see the remarks.' if instance.status == 'approved' else 'Thank you for your time and interest. Hope to work with you some other time.'}</p>
-            </body>
-            </html>
-            """
+                html_content = f"""
+                <html>
+                <body>
+                <h2>Grant Application Review</h2>
+                <p>Dear {html_escape(user.organisation_name)},</p>
+                <p>Your application for grant {html_escape(grant_application.grant.name)} has been reviewed.</p>
+                <p>Status: {html_escape(instance.status.capitalize())}</p>
+                <p>{notification_text}</p>
+                <p>{'Please login to see the remarks and next steps.' if instance.status != 'rejected' else 'Thank you for your time and interest. We hope to work with you in the future.'}</p>
+                </body>
+                </html>
+                """
+                send_formatted_email(
+                    subject=f"Grant Application Review - {instance.status.capitalize()}",
+                    html_content=html_content,
+                    recipient_list=[user.email]
+                )
 
-            send_formatted_email(
-                subject="Grant Application Review",
-                html_content=html_content,
-                recipient_list=[user.email]
-            )
+
+
 
 
 
@@ -397,26 +433,6 @@ def store_filtered_responses(sender, instance, **kwargs):
             )
 
 
-@receiver(post_save, sender=GrantApplication)
-def create_grant_account_on_complete(sender, instance, created, **kwargs):
-    if not created and instance.status == "complete":
-        if not GrantAccount.objects.filter(
-            grant=instance.grant, account_holder=instance.subgrantee
-        ).exists():
-            budget_total = BudgetTotal.objects.filter(
-                grant=instance.grant, application=instance, user=instance.subgrantee
-            ).first()
-            if not budget_total:
-                logger.error(
-                    f"No BudgetTotal found for grant ID {instance.grant.id}")
-                return
-            GrantAccount.objects.create(
-                grant=instance.grant,
-                account_holder=instance.subgrantee,
-                budget_total=budget_total,
-            )
-
-
 @receiver(post_save, sender=FundingAllocation)
 def update_grant_account(sender, instance, created, **kwargs):
     grant_account = instance.grant_account
@@ -435,6 +451,7 @@ def update_grant_account(sender, instance, created, **kwargs):
     # Save the updated grant account and budget item
     grant_account.save()
     budget_item.save()
+
 
 @receiver(post_save, sender=Disbursement)
 def notify_on_disbursement(sender, instance, created, **kwargs):
@@ -610,7 +627,6 @@ def notify_on_disbursement(sender, instance, created, **kwargs):
                 f"No SubgranteeProfile found for user: {subgrantee_user.email}")
 
 
-
 @receiver(post_save, sender=Disbursement)
 def update_grant_account_status(sender, instance, **kwargs):
     grant_account = instance.grant_account
@@ -624,9 +640,6 @@ def update_grant_account_status(sender, instance, **kwargs):
         grant_account.disbursed = 'not_disbursed'
 
     grant_account.save()
-
-
-
 
 
 @receiver(post_save, sender=GrantCloseOut)
@@ -645,28 +658,30 @@ def handle_grant_closeout(sender, instance, created, **kwargs):
         )
         request.save()
 
+
 @receiver(post_save, sender=Modifications)
 def create_request_for_modifications(sender, instance, created, **kwargs):
     if created:
         Requests.objects.create(
-            request_type = 'modification',
-            user = instance.requested_by,
+            request_type='modification',
+            user=instance.requested_by,
             modifications=instance,
         )
 
-@receiver(post_save, sender=Extensions) 
+
+@receiver(post_save, sender=Extensions)
 def create_request_for_extensions(sender, instance, created, **kwargs):
     if created:
         Requests.objects.create(
-            request_type = 'extension',
-            user = instance.requested_by,
+            request_type='extension',
+            user=instance.requested_by,
             extensions=instance,
         )
 
     else:
         request, created = Requests.objects.get_or_create(
-            request_type = 'extension',
-            user = instance.requested_by,
+            request_type='extension',
+            user=instance.requested_by,
             extensions=instance,
         )
         request.save()
@@ -777,7 +792,6 @@ def update_related_models(sender, instance, **kwargs):
                 recipient_list=[subgrantee.email]
             )
 
-
     elif request_type == 'extension' and request.extensions:
         extensions = request.extensions
         extensions.reviewed = True
@@ -803,6 +817,7 @@ def update_related_models(sender, instance, **kwargs):
             </body>
             </html>
             """
+
 
 @receiver(post_save, sender=FinancialReport)
 def notify_on_new_financial_report(sender, instance, created, **kwargs):
@@ -841,7 +856,6 @@ def save_requirements_request(sender, instance, created, **kwargs):
             user=instance.requested_by,
             requirements=instance,
         )
-
 
     else:
         # Handle the update case (else block)
@@ -983,7 +997,7 @@ def notify_admin_on_request(sender, instance, created, **kwargs):
                 html_content=html_content,
                 recipient_list=[admin.email]
             )
-    
+
     elif instance.request_type == 'extension':
         admins = CustomUser.objects.filter(is_staff=True)
         for admin in admins:
@@ -1003,9 +1017,3 @@ def notify_admin_on_request(sender, instance, created, **kwargs):
                 html_content=html_content,
                 recipient_list=[admin.email]
             )
-            
-
-
-
-
-        

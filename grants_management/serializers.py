@@ -260,7 +260,9 @@ class GrantApplicationSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GrantApplication
-        fields = "__all__"
+        fields = '__all__'
+
+        
 
 
 class GrantApplicationReviewSerializer(serializers.ModelSerializer):
