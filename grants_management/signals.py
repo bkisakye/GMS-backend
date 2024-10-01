@@ -274,32 +274,37 @@ def create_grant_account_on_complete(sender, instance, created, **kwargs):
 def notify_subgrantee_on_review(sender, instance, created, **kwargs):
     with transaction.atomic():
         print("Inside notify_subgrantee_on_review")
-        if created:
-            grant_application = instance.application
-            user = grant_application.subgrantee
-            print(
-                f"Before update: Application {grant_application.id} reviewed = {grant_application.reviewed}")
-            if user:
-                notification_text = f"Your grant application for '{grant_application.grant.name}' has been {instance.status}. "
+        grant_application = instance.application
+        user = grant_application.subgrantee
+
+        # Notify only if the status has changed
+        if user:
+            if created or instance.status != instance.__class__.objects.get(pk=instance.pk).status:
+                print(
+                    f"Before update: Application {grant_application.id} reviewed = {grant_application.reviewed}")
+
+                notification_text = f"Your grant application for '{grant_application.grant.name}' has been set to {instance.status}. "
+
                 if instance.status == "approved":
                     notification_text += "Please proceed to create your budget."
-                    
+
                 elif instance.status == "rejected":
                     notification_text += "Thank you for your application."
-                    
+
                 elif instance.status == "negotiate":
                     notification_text += "Please review the feedback and respond accordingly."
-                    
 
+                # Create notification
                 notification = Notification.objects.create(
                     notification_type='grantee',
                     notification_category='grant_review',
-                    text=notification_text
+                    text=notification_text,
+                    review=instance,
                 )
                 notification.user.add(user)
                 notification.save()
 
-
+                # Send email notification
                 html_content = f"""
                 <html>
                 <body>

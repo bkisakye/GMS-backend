@@ -237,3 +237,66 @@ class UnreadNotificationsView(APIView):
 
         serializer = NotificationSerializer(notifications, many=True)
         return Response(serializer.data)
+
+class NotificationsAll(APIView):
+    permission_classes= [IsAuthenticated]
+    def get(self, request, *args, **kwargs):
+            user = request.user
+            if user.is_staff:
+                notifications = Notification.objects.filter(notification_type='admin').order_by('-timestamp')
+            else:
+                notifications = Notification.objects.filter(notification_type='grantee').order_by('-timestamp')
+
+            serializer = NotificationSerializer(notifications, many=True)
+            return Response(serializer.data)    
+
+class UserNotificationsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, user_id, *args, **kwargs):
+        try:
+            user = CustomUser.objects.get(pk=user_id)
+        except CustomUser.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        if request.user != user and not request.user.is_staff:
+            return Response({"error": "You do not have permission to view this user's notifications"}, status=status.HTTP_403_FORBIDDEN)
+
+        if request.user.is_staff:
+            notifications = Notification.objects.filter(user=user, notification_type='admin').order_by('-timestamp')
+        else:
+            notifications = Notification.objects.filter(user=user, notification_type='grantee').order_by('-timestamp')
+
+        if notifications.exists():
+            serializer = NotificationSerializer(notifications, many=True)
+            return Response(serializer.data)
+        else:
+            return Response({"message": "No notifications found for this user"}, status=status.HTTP_404_NOT_FOUND)
+
+
+class NotificationReviewActionAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, pk):
+        try:
+
+            notification = Notification.objects.get(pk=pk)
+        except Notification.DoesNotExist:
+            return Response({'error': 'Notification not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if notification.notification_category == 'grant_review' and notification.review.status == 'negotiate':
+
+            action = request.data.get('action')
+
+
+            if action not in ['approve', 'decline']:
+                return Response({'error': 'Invalid action'}, status=status.HTTP_400_BAD_REQUEST)
+
+            notification.is_read = True
+            notification.review_recommendation = 'approved' if action == 'approve' else 'declined'
+            notification.save()
+
+            serializer = NotificationSerializer(notification)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        return Response({'error': 'Invalid notification category or review status'}, status=status.HTTP_400_BAD_REQUEST)

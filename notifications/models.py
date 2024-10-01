@@ -10,7 +10,6 @@ class Notification(models.Model):
         # Add other types as needed
     )
 
-
     NOTIFICATION_CATEGORY = (
         ('new_grant', 'New Grant'),
         ('grant_application', 'Grant Application'),
@@ -24,7 +23,18 @@ class Notification(models.Model):
         ('request_review', 'Request Review'),
         ('financial_report', 'Financial Report'),
         ('requests', 'Requests'),
-           
+    )
+
+    NOTIFICATION_STATUS = (
+        ('pending', 'Pending'),
+        ('approved', 'Approved'),
+        ('declined', 'Declined'),
+    )
+
+    REVIEW_RECOMMENDATION = (
+        ('approve', 'Approve'),
+        ('decline', 'Decline'),
+        ('negotiate', 'Negotiate'),
     )
 
     user = models.ManyToManyField(
@@ -36,6 +46,8 @@ class Notification(models.Model):
     text = models.CharField(max_length=255)
     timestamp = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)
+    status = models.CharField(
+        max_length=20, choices=NOTIFICATION_STATUS, default='pending')
     subgrantee = models.ForeignKey(
         'subgrantees.SubgranteeProfile', on_delete=models.CASCADE, null=True, blank=True)
     application = models.ForeignKey(
@@ -44,6 +56,10 @@ class Notification(models.Model):
         'grants_management.Grant', on_delete=models.CASCADE, null=True, blank=True)
     review = models.ForeignKey('grants_management.GrantApplicationReview',
                                on_delete=models.CASCADE, null=True, blank=True)
+    uploads = models.ForeignKey('grants_management.GrantApplicationReviewDocument', on_delete=models.CASCADE, null=True, blank=True)                           
+    review_recommendation = models.CharField(
+        max_length=20, choices=REVIEW_RECOMMENDATION, null=True, blank=True)
+
 
     def __str__(self):
         return self.text

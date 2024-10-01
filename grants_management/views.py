@@ -640,25 +640,37 @@ class GrantApplicationReviewListCreateAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def patch(self, request, pk):
-        try:
-            review = GrantApplicationReview.objects.get(pk=pk)
-        except GrantApplicationReview.DoesNotExist:
-            return Response({'error': 'Review not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        serializer = GrantApplicationReviewSerializer(
-            review, data=request.data, partial=True)
-        if serializer.is_valid():
-            updated_review = serializer.save()
-            # Update the application status and set reviewed to True
-            application = updated_review.application
-            # Set application status to updated review status
+def patch(self, request, pk):
+    try:
+        review = GrantApplicationReview.objects.get(pk=pk)
+    except GrantApplicationReview.DoesNotExist:
+        return Response({'error': 'Review not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = GrantApplicationReviewSerializer(
+        review, data=request.data, partial=True)
+    if serializer.is_valid():
+        updated_review = serializer.save()
+
+        # Update the application status and set reviewed to True
+        application = updated_review.application
+
+        # Only update the application status if it's different
+        if updated_review.status != application.status:
             application.status = updated_review.status
-            # Assuming you have a 'reviewed' field in GrantApplication
-            application.reviewed = True
-            application.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        # Assuming you have a 'reviewed' field in GrantApplication
+        application.reviewed = True
+        application.save()
+
+        # Trigger notification to subgrantee (optional)
+        notify_subgrantee_on_review(
+            sender=GrantApplicationReview, instance=updated_review, created=False)
+
+        return Response(serializer.data)
+
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
     def get(self, request):
         grant_id = request.query_params.get('grant')
@@ -672,6 +684,25 @@ class GrantApplicationReviewListCreateAPIView(APIView):
             reviews = GrantApplicationReview.objects.all()
         serializer = GrantApplicationReviewSerializer(reviews, many=True)
         return Response(serializer.data)
+
+
+class GrantApplicationReviewDetailAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, application_id):
+        try:
+            # Retrieve reviews for the given application ID
+            reviews = GrantApplicationReview.objects.filter(
+                application__id=application_id)
+
+            if not reviews.exists():
+                return Response({'error': 'No reviews found for this application'}, status=status.HTTP_404_NOT_FOUND)
+
+            serializer = GrantApplicationReviewSerializer(reviews, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
+        except GrantApplication.DoesNotExist:
+            return Response({'error': 'Application not found'}, status=status.HTTP_404_NOT_FOUND)
 
 
 class GrantApplicationApproveCountView(APIView):
