@@ -11,6 +11,8 @@ class ChatRoomSerializer(serializers.ModelSerializer):
 
 
 class MessageSerializer(serializers.ModelSerializer):
+    room = ChatRoomSerializer(read_only=True)
+    sender = CustomUserSerializer(read_only=True)
     class Meta:
         model = Message
         fields = ['id', 'room', 'sender', 'content', 'timestamp']
