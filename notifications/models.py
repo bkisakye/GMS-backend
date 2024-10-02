@@ -23,6 +23,7 @@ class Notification(models.Model):
         ('request_review', 'Request Review'),
         ('financial_report', 'Financial Report'),
         ('requests', 'Requests'),
+        ('messages', 'Messages'),
     )
 
     NOTIFICATION_STATUS = (
