@@ -21,6 +21,7 @@ ALLOWED_HOSTS = []
 
 # Application definition
 INSTALLED_APPS = [
+    'daphne',
     'jazzmin',
     'api',
     'django_celery_results',
@@ -40,6 +41,7 @@ INSTALLED_APPS = [
     'authentication',
     # 'django.contrib.messages',
     'notifications',
+    'chats',
 ]
 # CELERY_BROKER_URL = "redis://localhost:6379/0"
 CELERY_BROKER_URL = "redis://default:WcElpfpUKvjmBCpMCEXoBFEZkNuZdNCT@viaduct.proxy.rlwy.net:21260"
@@ -51,6 +53,16 @@ CELERY_TIMEZONE = "Africa/Kampala"
 
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
+ASGI_APPLICATION = 'BaylorGrants.asgi.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('redis: // default: WcElpfpUKvjmBCpMCEXoBFEZkNuZdNCT@viaduct.proxy.rlwy.net: 21260')],
+        },
+    },
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
