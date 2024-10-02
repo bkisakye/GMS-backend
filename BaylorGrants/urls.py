@@ -29,6 +29,7 @@ urlpatterns = [
     path('api/districts', include('api.urls')),
     # Include the URLs from the grant_applications application
     path('api/subgrantees/', include('subgrantees.urls')),
+    path('api/chat-room/', include('chats.urls')),
 
     #path('api/authenticate/', AuthenticateUser.as_view(), name='api_authenticate'),
   

@@ -8,7 +8,7 @@ class ChatRoom(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Chat Room for {self.subgrantee.organization_name}"
+        return f"Chat Room for {self.subgrantee.organisation_name}"
 
 
 class Message(models.Model):

@@ -25,7 +25,7 @@ class MessagePagination(PageNumberPagination):
 def get_messages(request, room_id):
     try:
         room = ChatRoom.objects.get(id=room_id)
-        if request.user == room.subgrantees or request.user.is_staff:
+        if request.user == room.subgrantee or request.user.is_staff:
             messages = room.messages.order_by('-timestamp')
             paginator = MessagePagination()
             result_page = paginator.paginate_queryset(messages, request)
@@ -43,7 +43,7 @@ def get_chat_rooms(request):
     if request.user.is_staff:
         chat_rooms = ChatRoom.objects.all().order_by('-created_at')
     else:
-        chat_rooms = ChatRoom.objects.filter(subgrantees=request.user)
+        chat_rooms = ChatRoom.objects.filter(subgrantee=request.user)
 
     serialized_chat_rooms = ChatRoomSerializer(chat_rooms, many=True).data
     return Response({'chat_rooms': serialized_chat_rooms}, status=200)
@@ -54,7 +54,7 @@ def get_chat_rooms(request):
 def send_message(request, room_id):
     room = get_object_or_404(ChatRoom, id=room_id)
 
-    if request.user == room.subgrantees or request.user.is_staff:
+    if request.user == room.subgrantee or request.user.is_staff:
         content = request.data.get('content')
         if not content:
             return Response({'error': 'Message content is required'}, status=400)
@@ -76,7 +76,7 @@ def send_message(request, room_id):
 def mark_messages_read(request, room_id):
     try:
         room = ChatRoom.objects.get(id=room_id)
-        if request.user == room.subgrantees or request.user.is_staff:
+        if request.user == room.subgrantee or request.user.is_staff:
             unread_messages = Message.objects.filter(
                 room=room, is_read=False).exclude(sender=request.user)
             unread_messages.update(is_read=True)
@@ -85,3 +85,21 @@ def mark_messages_read(request, room_id):
             return Response({'error': 'You are not authorized to mark messages in this room.'}, status=403)
     except ChatRoom.DoesNotExist:
         return Response({'error': 'Chat room not found'}, status=404)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_subgrantee_chat_room(request, subgrantee_id):
+    try:
+        # Fetch the user with the given subgrantee_id
+        subgrantee = CustomUser.objects.get(
+            id=subgrantee_id, is_staff=False, is_approved=True)
+
+        # Find the chat room associated with the subgrantee
+        chat_room = ChatRoom.objects.get(subgrantee=subgrantee)
+        serializer = ChatRoomSerializer(chat_room)
+        return Response(serializer.data, status=200)
+    except CustomUser.DoesNotExist:
+        return Response({'error': 'Subgrantee not found or not authorized'}, status=404)
+    except ChatRoom.DoesNotExist:
+        return Response({'error': 'Chat room not found for this subgrantee'}, status=404)
