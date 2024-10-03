@@ -46,7 +46,7 @@ def notify_admin_or_subgrantee_on_new_message(sender, instance, created, **kwarg
             # Notify admins
             notification = Notification.objects.create(
                 notification_type='admin',
-                notification_category='new_message',
+                notification_category='messages',
                 text=f"New message from {instance.sender.organisation_name}",
                 
             )
@@ -55,9 +55,9 @@ def notify_admin_or_subgrantee_on_new_message(sender, instance, created, **kwarg
         else:
             # Notify subgrantee
             notification = Notification.objects.create(
-                notification_type='subgrantee',
-                notification_category='new_message',
-                text=f"New message from {instance.sender.username}",
+                notification_type='grantee',
+                notification_category='messages',
+                text=f"New message from {instance.sender.email}",
             
             )
             notification.user.add(instance.room.subgrantee)
