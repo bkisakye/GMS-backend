@@ -641,35 +641,32 @@ class GrantApplicationReviewListCreateAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-def patch(self, request, pk):
-    try:
-        review = GrantApplicationReview.objects.get(pk=pk)
-    except GrantApplicationReview.DoesNotExist:
-        return Response({'error': 'Review not found'}, status=status.HTTP_404_NOT_FOUND)
+    def patch(self, request, pk):
+        try:
+            review = GrantApplicationReview.objects.get(pk=pk)
+        except GrantApplicationReview.DoesNotExist:
+            return Response({'error': 'Review not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    serializer = GrantApplicationReviewSerializer(
-        review, data=request.data, partial=True)
-    if serializer.is_valid():
-        updated_review = serializer.save()
+        serializer = GrantApplicationReviewSerializer(
+            review, data=request.data, partial=True)
+        if serializer.is_valid():
+            updated_review = serializer.save()
 
-        # Update the application status and set reviewed to True
-        application = updated_review.application
+            # Update the application status and set reviewed to True
+            application = updated_review.application
 
-        # Only update the application status if it's different
-        if updated_review.status != application.status:
-            application.status = updated_review.status
+            # Only update the application status if it's different
+            if updated_review.status != application.status:
+                application.status = updated_review.status
 
-        # Assuming you have a 'reviewed' field in GrantApplication
-        application.reviewed = True
-        application.save()
+            # Assuming you have a 'reviewed' field in GrantApplication
+            application.reviewed = True
+            application.save()
 
-        # Trigger notification to subgrantee (optional)
-        notify_subgrantee_on_review(
-            sender=GrantApplicationReview, instance=updated_review, created=False)
 
-        return Response(serializer.data)
+            return Response(serializer.data)
 
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
     def get(self, request):

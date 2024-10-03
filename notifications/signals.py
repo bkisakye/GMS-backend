@@ -38,7 +38,7 @@ def notify_admin_on_grant_review_action(sender, instance, created, **kwargs):
 
         if instance.review:
             logger.info(
-                f"Associated review found. Recommendation: {instance.review.review_recommendation}")
+                f"Associated review found. Recommendation: {instance.review}")
         else:
             logger.info("No associated review found")
 
