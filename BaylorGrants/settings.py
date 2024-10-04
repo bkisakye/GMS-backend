@@ -3,6 +3,8 @@ from datetime import timedelta
 from dotenv import load_dotenv
 import os
 from celery.schedules import crontab
+import ldap
+from django_auth_ldap.config import LDAPSearch, GroupOfNamesType
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -147,10 +149,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTHENTICATION_BACKENDS = [
     'authentication.backend.CustomAuthenticationBackend',
     'django.contrib.auth.backends.ModelBackend',
-    'django_auth_ldap.backend.LDAPBackend',
+    # 'django_auth_ldap.backend.LDAPBackend',
 ]
 
 AUTH_USER_MODEL = 'authentication.CustomUser'
+# LDAP Configuration
+# AUTH_LDAP_SERVER_URI = "ldap://dc01:389"
+
+
 
 # JWT Settings
 REST_FRAMEWORK = {

@@ -543,13 +543,14 @@ def notify_on_report_review(sender, instance, created, **kwargs):
         subgrantee = grant_account.account_holder
 
         if subgrantee:
-            text = f"Your progress report for '{grant_account.grant.name}' has been reviewed."
+            text = f"Your progress report for '{grant_account.grant.name}' has been {instance.reviewer_status}."
 
             # Create or update the notification
             notification, created = Notification.objects.get_or_create(
                 notification_type="grantee",
                 notification_category="status_report_reviewed",
                 grant=grant_account.grant,
+                progress_report=instance,
                 defaults={'text': text}
             )
 
@@ -567,7 +568,7 @@ def notify_on_report_review(sender, instance, created, **kwargs):
                 message=f"""
                 Dear {subgrantee.organisation_name},
 
-                Your progress report for the grant '{instance.grant_account.grant.name}' has been reviewed and below are the comments from the grantor.
+                Your progress report for the grant '{instance.grant_account.grant.name}' has been {instance.reviewer_status} and below are the comments from the grantor.
                 
                 Review Details:
                 Review Date: {instance.last_updated}

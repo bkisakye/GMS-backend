@@ -42,7 +42,7 @@ def notify_admin_on_grant_review_action(sender, instance, created, **kwargs):
         else:
             logger.info("No associated review found")
 
-        if instance.review and instance.review.review_recommendation == 'negotiate':
+        if instance.review and instance.review_recommendation == 'negotiate':
             logger.info("Review recommendation is 'negotiate'")
 
             if instance.status in ['approved', 'declined']:
