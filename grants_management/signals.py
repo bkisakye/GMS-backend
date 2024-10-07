@@ -27,6 +27,7 @@ from .models import (
     FinancialReport,
     Requirements,
     Extensions,
+    GrantApplicationReviewDocument
 )
 from django.utils.html import escape as html_escape
 from authentication.models import CustomUser
@@ -300,6 +301,9 @@ def notify_subgrantee_on_review(sender, instance, created, **kwargs):
                     notification_category='grant_review',
                     text=notification_text,
                     review=instance,
+                    uploads=GrantApplicationReviewDocument.objects.filter(
+                        review=instance
+                    ).first()
                 )
                 notification.user.add(user)
                 notification.save()
@@ -695,15 +699,15 @@ def create_request_for_extensions(sender, instance, created, **kwargs):
 
 @receiver(post_save, sender=RequestReview)
 def update_related_models(sender, instance, **kwargs):
-    request = instance.request
+    requesting = instance.request
 
     # Determine the request type from the related Request
-    request_type = request.request_type
-    request.reviewed = True
-    request.save()
+    request_type = requesting.request_type
+    requesting.reviewed = True
+    requesting.save()
 
-    if request_type == 'grant_closeout' and request.grant_closeout:
-        grant_closeout = request.grant_closeout
+    if request_type == 'grant_closeout' and requesting.grant_closeout:
+        grant_closeout = requesting.grant_closeout
         grant_closeout.reviewed = True
         grant_closeout.reviewed_by = instance.reviewer
         grant_closeout.status = instance.status
@@ -712,11 +716,19 @@ def update_related_models(sender, instance, **kwargs):
         grant_account = grant_closeout.grant_account
         subgrantee = grant_account.account_holder
 
+        subgrantee_profile = SubgranteeProfile.objects.get(user=subgrantee)
         action = f"{instance.status}"
         text = f"Your request to closeout grant {grant_account.grant.name} has been {action}."
 
         if subgrantee:
-            create_notification(subgrantee, 'grantee', 'request_review', text)
+            notification = Notification.objects.create(
+                notification_type='grantee',
+                notification_category='request_review',
+                text=text,
+                subgrantee=subgrantee_profile,
+                requests=instance,
+            )
+            notification.user.add(subgrantee)
 
             html_content = f"""
             <html>
@@ -734,8 +746,8 @@ def update_related_models(sender, instance, **kwargs):
                 recipient_list=[subgrantee.email]
             )
 
-    elif request_type == 'requirements' and request.requirements:
-        requirements = request.requirements
+    elif request_type == 'requirements' and requesting.requirements:
+        requirements = requesting.requirements
         requirements.reviewed = True
         requirements.reviewed_by = instance.reviewer
         requirements.status = instance.status
@@ -744,11 +756,19 @@ def update_related_models(sender, instance, **kwargs):
         grant_account = requirements.grant_account
         subgrantee = grant_account.account_holder
 
+        subgrantee_profile = SubgranteeProfile.objects.get(user=subgrantee)
         action = f"{instance.status}"
         text = f"Your request for requirements for grant {grant_account.grant.name} has been {action}."
 
         if subgrantee:
-            create_notification(subgrantee, 'grantee', 'request_review', text)
+            notification = Notification.objects.create(
+                notification_type='grantee',
+                notification_category='request_review',
+                text=text,
+                subgrantee=subgrantee_profile,
+                requests=instance,
+            )
+            notification.user.add(subgrantee)
 
             html_content = f"""
             <html>
@@ -766,8 +786,8 @@ def update_related_models(sender, instance, **kwargs):
                 recipient_list=[subgrantee.email]
             )
 
-    elif request_type == 'modifications' and request.modifications:
-        modifications = request.modifications
+    elif request_type == 'modifications' and requesting.modifications:
+        modifications = requesting.modifications
         modifications.reviewed = True
         modifications.reviewed_by = instance.reviewer
         modifications.status = instance.status
@@ -776,11 +796,19 @@ def update_related_models(sender, instance, **kwargs):
         grant_account = modifications.grant_account
         subgrantee = grant_account.account_holder
 
+        subgrantee_profile = SubgranteeProfile.objects.get(user=subgrantee)
         action = f"{instance.status}"
         text = f"Your request for modifications for grant {grant_account.grant.name} has been {action}."
 
         if subgrantee:
-            create_notification(subgrantee, 'grantee', 'request_review', text)
+            notification = Notification.objects.create(
+                notification_type='grantee',
+                notification_category='request_review',
+                text=text,
+                subgrantee=subgrantee_profile,
+                requests=instance,
+            )
+            notification.user.add(subgrantee)
 
             html_content = f"""
             <html>
@@ -798,8 +826,8 @@ def update_related_models(sender, instance, **kwargs):
                 recipient_list=[subgrantee.email]
             )
 
-    elif request_type == 'extension' and request.extensions:
-        extensions = request.extensions
+    elif request_type == 'extension' and requesting.extensions:
+        extensions = requesting.extensions
         extensions.reviewed = True
         extensions.reviewed_by = instance.reviewer
         extensions.status = instance.status
@@ -808,11 +836,20 @@ def update_related_models(sender, instance, **kwargs):
         grant_account = extensions.grant_account
         subgrantee = grant_account.account_holder
 
+        subgrantee_profile = SubgranteeProfile.objects.get(user=subgrantee)
         action = f"{instance.status}"
         text = f"Your request for extensions for grant {grant_account.grant.name} has been {action}."
 
         if subgrantee:
-            create_notification(subgrantee, 'grantee', 'request_review', text)
+            notification = Notification.objects.create(
+                notification_type='grantee',
+                notification_category='request_review',
+                text=text,
+                subgrantee=subgrantee_profile,
+                request=instance,
+            )
+            notification.user.add(subgrantee)
+
             html_content = f"""
             <html>
             <body>
@@ -823,6 +860,11 @@ def update_related_models(sender, instance, **kwargs):
             </body>
             </html>
             """
+            send_formatted_email(
+                subject="Grant Extensions Review",
+                html_content=html_content,
+                recipient_list=[subgrantee.email]
+            )
 
 
 @receiver(post_save, sender=FinancialReport)

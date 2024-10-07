@@ -24,6 +24,7 @@ class Notification(models.Model):
         ('financial_report', 'Financial Report'),
         ('requests', 'Requests'),
         ('messages', 'Messages'),
+        ('reminders', 'Reminders'),
     )
 
     NOTIFICATION_STATUS = (
@@ -57,6 +58,7 @@ class Notification(models.Model):
         'grants_management.Grant', on_delete=models.CASCADE, null=True, blank=True)
     review = models.ForeignKey('grants_management.GrantApplicationReview',
                                on_delete=models.CASCADE, null=True, blank=True)
+    requests = models.ForeignKey('grants_management.RequestReview', on_delete=models.CASCADE, blank=True, null=True)                              
     uploads = models.ForeignKey('grants_management.GrantApplicationReviewDocument', on_delete=models.CASCADE, null=True, blank=True)        
     progress_report = models.ForeignKey('grants_management.ProgressReport', on_delete=models.CASCADE, null=True, blank=True)  
     chats = models.ForeignKey('chats.message', on_delete=models.CASCADE, null=True, blank=True)                
