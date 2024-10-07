@@ -3,6 +3,7 @@ from .models import Notification
 from authentication.serializers import CustomUserSerializer
 from grants_management.serializers import GrantApplicationSerializer, GrantApplicationReviewSerializer, ProgressReportSerializer
 from django.contrib.auth import get_user_model
+from chats.serializers import MessageSerializer
 
 User = get_user_model()
 
@@ -16,8 +17,9 @@ class NotificationSerializer(serializers.ModelSerializer):
     application = GrantApplicationSerializer(read_only=True)
     review = GrantApplicationReviewSerializer(read_only=True)
     progress_report = ProgressReportSerializer(read_only=True)
+    chats = MessageSerializer(read_only=True)
 
     class Meta:
         model = Notification
         fields = ('id', 'user', 'notification_type', 'notification_category', 'text',
-                  'timestamp', 'is_read', 'application', 'review', 'subgrantee', 'grant', 'review_recommendation', 'progress_report',)
+                  'timestamp', 'is_read', 'application', 'review', 'subgrantee', 'grant', 'review_recommendation', 'progress_report','chats',)

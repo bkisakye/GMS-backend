@@ -48,6 +48,7 @@ def notify_admin_or_subgrantee_on_new_message(sender, instance, created, **kwarg
                 notification_type='admin',
                 notification_category='messages',
                 text=f"New message from {instance.sender.organisation_name}",
+                chats=instance,
                 
             )
             notification.user.set(admins)
@@ -58,6 +59,7 @@ def notify_admin_or_subgrantee_on_new_message(sender, instance, created, **kwarg
                 notification_type='grantee',
                 notification_category='messages',
                 text=f"New message from {instance.sender.email}",
+                chats=instance,
             
             )
             notification.user.add(instance.room.subgrantee)

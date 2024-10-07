@@ -58,7 +58,8 @@ class Notification(models.Model):
     review = models.ForeignKey('grants_management.GrantApplicationReview',
                                on_delete=models.CASCADE, null=True, blank=True)
     uploads = models.ForeignKey('grants_management.GrantApplicationReviewDocument', on_delete=models.CASCADE, null=True, blank=True)        
-    progress_report = models.ForeignKey('grants_management.ProgressReport', on_delete=models.CASCADE, null=True, blank=True)                  
+    progress_report = models.ForeignKey('grants_management.ProgressReport', on_delete=models.CASCADE, null=True, blank=True)  
+    chats = models.ForeignKey('chats.message', on_delete=models.CASCADE, null=True, blank=True)                
     review_recommendation = models.CharField(
         max_length=20, choices=REVIEW_RECOMMENDATION, null=True, blank=True)
 
