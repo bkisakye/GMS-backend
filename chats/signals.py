@@ -49,7 +49,7 @@ def notify_admin_or_subgrantee_on_new_message(sender, instance, created, **kwarg
                 notification_category='messages',
                 text=f"New message from {instance.sender.organisation_name}",
                 chats=instance,
-                
+
             )
             notification.user.set(admins)
 
@@ -60,6 +60,17 @@ def notify_admin_or_subgrantee_on_new_message(sender, instance, created, **kwarg
                 notification_category='messages',
                 text=f"New message from {instance.sender.email}",
                 chats=instance,
-            
+
             )
             notification.user.add(instance.room.subgrantee)
+
+
+@receiver(post_save, sender=Notification)
+def mark_message_read(sender, instance, created, **kwargs):
+    # Check if the notification is of the correct category and is marked as read
+    if instance.notification_category == 'messages' and instance.is_read:
+        # Access the related message (assuming instance has a related field to Message called `chats`)
+        message = instance.chats  # Adjust to the correct field name if necessary
+        if message and not message.is_read:
+            message.is_read = True
+            message.save()
