@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 @shared_task(bind=True, rate_limit='1/m')
 def deactivate_expired_grants(self):
-    logger.info(f'Task {self.request.id} started')
+    
     now = timezone.now().date()
     expired_grants = Grant.objects.filter(
         application_deadline__lt=now, is_active=True)
@@ -33,21 +33,29 @@ def deactivate_expired_grants(self):
 
 @shared_task(bind=True, rate_limit='1/m')
 def close_dead_grants(self):
-    now = timezone.now().date()
-    dead_grants = Grant.objects.filter(end_date__lt=now, is_open=True)
+    logger.info(f'Task {self.request.id} started')
+    today = timezone.now().date()
 
-    with transaction.atomic():
-        closed_count = 0
-        for grant in dead_grants:
-            grant.is_open = False
-            try:
-                grant.save()
-                closed_count += 1
-            except Exception as e:
-                # Optionally, log the exception here
-                print(f"Error closing grant {grant.id}: {e}")
+    try:
+        with transaction.atomic():
+            dead_grants = Grant.objects.filter(
+                end_date__lte=today, is_open=True)
+            closed_count = dead_grants.update(is_open=False)
 
-    return f"Closed {closed_count} grants."
+            # Log individual grant closures
+            for grant in dead_grants:
+                logger.info(f"Closed grant: {grant.name} (ID: {grant.id})")
+
+        logger.info(
+            f'Task {self.request.id} finished successfully. Closed {closed_count} grants.')
+        return f"Closed {closed_count} grants."
+
+    except Exception as e:
+        logger.error(f"Error in task {self.request.id}: {str(e)}")
+        # Re-raise the exception so Celery knows the task failed
+        raise
+
+
 
 
 @shared_task
@@ -135,6 +143,8 @@ def send_report_reminders():
         status='active'
     ).select_related('grant', 'account_holder')
 
+    reminders_sent = 0
+
     for account in accounts_due_for_reports:
         user = account.account_holder
         grant = account.grant
@@ -156,11 +166,11 @@ def send_report_reminders():
         # Check if the next report date is within the reminder window
         if now.date() <= next_report_date.date() <= reminder_window.date():
             notification = Notification.objects.create(
-                user=user,
                 notification_category='reminders',
                 notification_type='grantee',
                 text=f"Reminder: Your progress report for grant '{grant.name}' is due on {next_report_date.strftime('%Y-%m-%d')}.",
             )
+            notification.user.add(user)
 
             try:
                 send_mail(
@@ -170,8 +180,10 @@ def send_report_reminders():
                     [user.email],
                     fail_silently=False,
                 )
+                reminders_sent += 1
             except Exception as e:
-                # Log the error for debugging
-                print(f"Failed to send email to {user.email}: {e}")
+                logger.error(f"Failed to send email to {user.email}: {str(e)}")
 
-    return f"Reminder process completed. Checked {accounts_due_for_reports.count()} active grant accounts."
+    logger.info(
+        f"Reminder process completed. Sent {reminders_sent} reminders out of {accounts_due_for_reports.count()} active grant accounts.")
+    return f"Reminder process completed. Sent {reminders_sent} reminders out of {accounts_due_for_reports.count()} active grant accounts."

@@ -58,13 +58,6 @@ def grant_list(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(["GET"])
-@permission_classes([permissions.IsAuthenticated])
-def activegrant_count(request):
-    count = Grant.objects.filter(is_open=True).count()
-    return Response(count, status=status.HTTP_200_OK)
-
-
 @api_view(["PATCH"])
 @permission_classes([permissions.IsAuthenticated])
 def update_grant(request, pk):

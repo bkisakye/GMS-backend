@@ -301,9 +301,6 @@ def notify_subgrantee_on_review(sender, instance, created, **kwargs):
                     notification_category='grant_review',
                     text=notification_text,
                     review=instance,
-                    uploads=GrantApplicationReviewDocument.objects.filter(
-                        review=instance
-                    ).first()
                 )
                 notification.user.add(user)
                 notification.save()
@@ -328,7 +325,15 @@ def notify_subgrantee_on_review(sender, instance, created, **kwargs):
                 )
 
 
+@receiver(post_save, sender=GrantApplicationReviewDocument)
+def update_notification_with_upload(sender, instance, **kwargs):
+    # Find the Notification related to this review
+    notification = Notification.objects.filter(review=instance.review).first()
 
+    # Update the notification's uploads field if a related notification is found
+    if notification:
+        notification.uploads = instance
+        notification.save()
 
 
 
