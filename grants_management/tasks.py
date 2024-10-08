@@ -165,7 +165,7 @@ def send_report_reminders():
             try:
                 send_mail(
                     'Progress Report Reminder',
-                    f"Dear {user.get_full_name()},\n\nThis is a reminder that your progress report for the grant '{grant.name}' is due on {next_report_date.strftime('%Y-%m-%d')}. Please ensure it is submitted on time.\n\nBest regards,\nGrant Management Team",
+                    f"Dear {user.organisation_name},\n\nThis is a reminder that your progress report for the grant '{grant.name}' is due on {next_report_date.strftime('%Y-%m-%d')}. Please ensure it is submitted on time.\n\nBest regards,\nGrant Management Team",
                     settings.DEFAULT_FROM_EMAIL,
                     [user.email],
                     fail_silently=False,
