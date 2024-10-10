@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Notification
 from authentication.serializers import CustomUserSerializer
-from grants_management.serializers import GrantApplicationSerializer, GrantApplicationReviewSerializer, ProgressReportSerializer, RequestReviewSerializer, GrantApplicationReviewDocumentSerializer
+from grants_management.serializers import GrantApplicationSerializer, GrantApplicationReviewSerializer, ProgressReportSerializer, RequestReviewSerializer, GrantApplicationReviewDocumentSerializer, GrantSerializer
 from django.contrib.auth import get_user_model
 from chats.serializers import MessageSerializer
 
@@ -20,6 +20,7 @@ class NotificationSerializer(serializers.ModelSerializer):
     chats = MessageSerializer(read_only=True)
     requests = RequestReviewSerializer(read_only=True)
     uploads = GrantApplicationReviewDocumentSerializer(read_only=True)
+    grant = GrantSerializer(read_only=True)
 
     class Meta:
         model = Notification

@@ -69,56 +69,35 @@ def create_notification(user, notification_type, notification_category, text, **
 
 
 @receiver(post_save, sender=Grant)
-def check_end_date(sender, instance, **kwargs):
-    # Avoid re-saving the instance to prevent recursion
-    if instance.end_date and instance.end_date < timezone.now().date():
-        if instance.is_active:  # Only update if necessary
-            instance.is_active = False
-            instance.save(update_fields=["is_active"])
-
-
-# Uncomment if you need the grant creation notification functionality
-
-@receiver(post_save, sender=Grant)
 def notify_grantees_on_grant_creation(sender, instance, created, **kwargs):
     if created:
         grantees = CustomUser.objects.filter(is_staff=False, is_approved=True)
-        notifications = []
-        for grantee in grantees:
-            try:
-                # Create a Notification instance but don't set the many-to-many field yet
-                notification = Notification(
-                    notification_type="grantee",
-                    notification_category="new_grant",
-                    text=f"New grant available: {instance.name}",
-                    grant=instance,
-                )
-                notifications.append(notification)
-            except TypeError as e:
-                logger.error(f"Error creating notification: {e}")
 
-        # Bulk create notifications
-        try:
-            Notification.objects.bulk_create(notifications)
-        except Exception as e:
-            logger.error(f"Error bulk creating notifications: {e}")
+        # Create a single Notification instance
+        notification = Notification(
+            notification_type="grantee",
+            notification_category="new_grant",
+            text=f"New funding opportunity available",
+            grant=instance,
+        )
+        notification.save()  # Save to create the Notification instance in the database
 
-        # Update the many-to-many relationships
-        for notification in notifications:
-            notification.user.set(grantees)  # Set users for the notification
-            notification.save()
+        # Set all grantees as users for this single notification
+        notification.user.set(grantees)
 
+        # Sending email notifications
         email_list = [grantee.email for grantee in grantees]
         try:
             send_mail(
                 "New Grant Available",
-                f"A new grant has been added: {instance.name}. Check the grant details in your dashboard.",
+                f"A new funding opportunity has been added: {instance.name}. Please login and check the details in your dashboard.",
                 settings.DEFAULT_FROM_EMAIL,
                 email_list,
                 fail_silently=False,
             )
         except Exception as e:
             logger.error(f"Error sending email notification: {e}")
+
 
 
 @receiver(post_save, sender=GrantApplicationDocument)
@@ -130,14 +109,14 @@ def notify_admin_on_grant_application(sender, instance, created, **kwargs):
     if created:
         message_type = "submitted"
         notification_text = (
-            f"A new grant application has been submitted by {instance.user.organisation_name} "
-            f"for the grant: {instance.application.grant.name}."
+            f"A new application for a funding opportunity has been submitted by {instance.user.organisation_name} "
+            f"for: {instance.application.grant.name}."
         )
     else:
         message_type = "updated"
         notification_text = (
-            f"The grant application submitted by {instance.user.organisation_name} "
-            f"for the grant: {instance.application.grant.name} has been updated."
+            f"The application for funding opportunity submitted by {instance.user.organisation_name} "
+            f"for: {instance.application.grant.name} has been updated."
         )
 
     # Creating the notification object
@@ -284,7 +263,7 @@ def notify_subgrantee_on_review(sender, instance, created, **kwargs):
                 print(
                     f"Before update: Application {grant_application.id} reviewed = {grant_application.reviewed}")
 
-                notification_text = f"Your grant application for '{grant_application.grant.name}' has been set to {instance.status}. "
+                notification_text = f"Your application for '{grant_application.grant.name}' has been set to {instance.status}. "
 
                 if instance.status == "approved":
                     notification_text += "Please proceed to create your budget."
@@ -311,7 +290,7 @@ def notify_subgrantee_on_review(sender, instance, created, **kwargs):
                 <body>
                 <h2>Grant Application Review</h2>
                 <p>Dear {html_escape(user.organisation_name)},</p>
-                <p>Your application for grant {html_escape(grant_application.grant.name)} has been reviewed.</p>
+                <p>Your application for funding opportunity {html_escape(grant_application.grant.name)} has been reviewed.</p>
                 <p>Status: {html_escape(instance.status.capitalize())}</p>
                 <p>{notification_text}</p>
                 <p>{'Please login to see the remarks and next steps.' if instance.status != 'rejected' else 'Thank you for your time and interest. We hope to work with you in the future.'}</p>
@@ -354,7 +333,7 @@ def notify_grantee_on_successful_submission(sender, instance, created, **kwargs)
                 notification = Notification.objects.create(
                     notification_type='grantee',
                     notification_category='grant_submission',
-                    text=f"Your application for the grant '{grant_application.grant.name}' have been successfully submitted.",
+                    text=f"Your application for the funding opportunity '{grant_application.grant.name}' have been successfully submitted.",
                     application=grant_application,
                     grant=grant_application.grant
 
@@ -374,7 +353,7 @@ def notify_grantee_on_successful_submission(sender, instance, created, **kwargs)
                 <body>
                 <h2>Grant Application</h2>
                 <p>Dear {html.escape(user.organisation_name)},</p>
-                <p>Your application for grant {html.escape(grant_application.grant.name)} has been submitted successfully</p>
+                <p>Your application for funding opportunity {html.escape(grant_application.grant.name)} has been submitted successfully</p>
                 <p>Please wait for a response as its being reviewed.</p>
                 </body>
                 </html>
@@ -521,7 +500,7 @@ def notify_on_disbursement(sender, instance, created, **kwargs):
             <body>
                 <h2>Disbursement {action.capitalize()} for Grant: {html.escape(grant_account.grant.name)}</h2>
                 <p>Dear {html.escape(str(subgrantee_profile))},</p>
-                <p>Your account for the grant '{html.escape(grant_account.grant.name)}' has been {action}.</p>
+                <p>Your account for the funding opportunity '{html.escape(grant_account.grant.name)}' has been {action}.</p>
                 <h3>Disbursement Details:</h3>
                 <ul>
                     <li><strong>Disbursement Date:</strong> {instance.disbursement_date}</li>
@@ -577,7 +556,7 @@ def notify_on_report_review(sender, instance, created, **kwargs):
                 message=f"""
                 Dear {subgrantee.organisation_name},
 
-                Your progress report for the grant '{instance.grant_account.grant.name}' has been {instance.reviewer_status} and below are the comments from the grantor.
+                Your progress report for the funding opportunity '{instance.grant_account.grant.name}' has been {instance.reviewer_status} and below are the comments from the grantor.
                 
                 Review Details:
                 Review Date: {instance.last_updated}
@@ -620,7 +599,7 @@ def notify_on_disbursement(sender, instance, created, **kwargs):
             <body>
                 <h2>Disbursement {action.capitalize()} for Grant: {html.escape(grant_account.grant.name)}</h2>
                 <p>Dear {html.escape(subgrantee_user.organisation_name)},</p>
-                <p>Your account for the grant '{html.escape(grant_account.grant.name)}' has been {action}.</p>
+                <p>Your account for the funding opportunity '{html.escape(grant_account.grant.name)}' has been {action}.</p>
                 <h3>Disbursement Details:</h3>
                 <ul>
                     <li><strong>Disbursement Date:</strong> {instance.disbursement_date}</li>
@@ -723,7 +702,7 @@ def update_related_models(sender, instance, **kwargs):
 
         subgrantee_profile = SubgranteeProfile.objects.get(user=subgrantee)
         action = f"{instance.status}"
-        text = f"Your request to closeout grant {grant_account.grant.name} has been {action}."
+        text = f"Your request to closeout funding opportunity {grant_account.grant.name} has been {action}."
 
         if subgrantee:
             notification = Notification.objects.create(
@@ -740,7 +719,7 @@ def update_related_models(sender, instance, **kwargs):
             <body>
             <h2>Grant Closeout Request</h2>
             <p>Dear {html_escape(subgrantee.organisation_name)},</p>
-            <p>Your request to closeout grant {html_escape(grant_account.grant.name)} has been {action}.</p>
+            <p>Your request to closeout funding opportunity {html_escape(grant_account.grant.name)} has been {action}.</p>
             <p>Please review this closeout request and take any necessary actions.</p>
             </body>
             </html>
@@ -763,7 +742,7 @@ def update_related_models(sender, instance, **kwargs):
 
         subgrantee_profile = SubgranteeProfile.objects.get(user=subgrantee)
         action = f"{instance.status}"
-        text = f"Your request for requirements for grant {grant_account.grant.name} has been {action}."
+        text = f"Your request for requirements for funding opportunity {grant_account.grant.name} has been {action}."
 
         if subgrantee:
             notification = Notification.objects.create(
@@ -780,7 +759,7 @@ def update_related_models(sender, instance, **kwargs):
             <body>
             <h2>Grant Requirements Review</h2>
             <p>Dear {html_escape(subgrantee.organisation_name)},</p>
-            <p>Your request for requirements for grant {html_escape(grant_account.grant.name)} has been {action}.</p>
+            <p>Your request for requirements for funding opportunity {html_escape(grant_account.grant.name)} has been {action}.</p>
             <p>Please review this requirement and take any necessary actions.</p>
             </body>
             </html>
@@ -803,7 +782,7 @@ def update_related_models(sender, instance, **kwargs):
 
         subgrantee_profile = SubgranteeProfile.objects.get(user=subgrantee)
         action = f"{instance.status}"
-        text = f"Your request for modifications for grant {grant_account.grant.name} has been {action}."
+        text = f"Your request for modifications for funding opportunity {grant_account.grant.name} has been {action}."
 
         if subgrantee:
             notification = Notification.objects.create(
@@ -820,7 +799,7 @@ def update_related_models(sender, instance, **kwargs):
             <body>
             <h2>Grant Modifications Review</h2>
             <p>Dear {html_escape(subgrantee.organisation_name)},</p>
-            <p>Your request for modifications for grant {html_escape(grant_account.grant.name)} has been {action}.</p>
+            <p>Your request for modifications for funding opportunity {html_escape(grant_account.grant.name)} has been {action}.</p>
             <p>Please review this modification request and take any necessary actions.</p>
             </body>
             </html>
@@ -843,7 +822,7 @@ def update_related_models(sender, instance, **kwargs):
 
         subgrantee_profile = SubgranteeProfile.objects.get(user=subgrantee)
         action = f"{instance.status}"
-        text = f"Your request for extensions for grant {grant_account.grant.name} has been {action}."
+        text = f"Your request for extensions for funding opportunity {grant_account.grant.name} has been {action}."
 
         if subgrantee:
             notification = Notification.objects.create(
@@ -860,7 +839,7 @@ def update_related_models(sender, instance, **kwargs):
             <body>
             <h2>Grant Extensions Review</h2>
             <p>Dear {html_escape(subgrantee.organisation_name)},</p>
-            <p>Your request for extensions for grant {html_escape(grant_account.grant.name)} has been {action}.</p>
+            <p>Your request for extensions for funding opportunity {html_escape(grant_account.grant.name)} has been {action}.</p>
             <p>Please review this extension request and take any necessary actions.</p>
             </body>
             </html>
@@ -888,7 +867,7 @@ def notify_on_new_financial_report(sender, instance, created, **kwargs):
         <body>
         <h2>Financial Report</h2>
         <p>Dear {html.escape(subgrantee.organisation_name)},</p>
-        <p>Your financial report for grant {grant_account.grant.name} has been created on {instance.report_date}.</p>
+        <p>Your financial report for funding opportunity {grant_account.grant.name} has been created on {instance.report_date}.</p>
         <p>Please log in to your account to review the report.</p>
         </body>
         </html>
@@ -931,7 +910,7 @@ def notify_admin_on_request(sender, instance, created, **kwargs):
         if not grant_closeout.initiated_by.is_staff:
             admin_users = CustomUser.objects.filter(is_staff=True)
             for admin in admin_users:
-                text = f'A closeout for grant {grant_closeout.grant_account.grant.name} has been initiated by {grant_closeout.initiated_by.organisation_name}. Reason: {grant_closeout.reason}'
+                text = f'A closeout for funding opportunity {grant_closeout.grant_account.grant.name} has been initiated by {grant_closeout.initiated_by.organisation_name}. Reason: {grant_closeout.reason}'
                 create_notification(admin, 'admin', 'grant_closeout', text)
 
                 html_content = f"""
@@ -955,7 +934,7 @@ def notify_admin_on_request(sender, instance, created, **kwargs):
                 )
 
         elif grant_closeout.initiated_by.is_staff:
-            text = f'A closeout for grant {grant_closeout.grant_account.grant.name} has been initiated. Reason: {grant_closeout.reason}'
+            text = f'A closeout for funding opportunity {grant_closeout.grant_account.grant.name} has been initiated. Reason: {grant_closeout.reason}'
             create_notification(
                 grant_closeout.grant_account.account_holder, 'grantee', 'requests', text)
 
