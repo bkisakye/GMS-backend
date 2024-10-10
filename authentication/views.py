@@ -128,7 +128,7 @@ class GranteeSignupView(APIView):
             user.send_pending_approval_email()
 
             # Notify the admin
-            SubgranteeProfile.objects.create(user=user)
+            # SubgranteeProfile.objects.create(user=user)
             # self.notify_admin(user)
 
             return Response(
