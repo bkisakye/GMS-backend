@@ -31,40 +31,72 @@ RequestReview,
     GrantApplicationReviewDocument,
 )
 
-admin.site.register(GrantApplicationReviewDocument)
-
-admin.site.register(Extensions)
-
-admin.site.register(Requirements)
-
-admin.site.register(Requests)
 
 admin.site.register(Modifications)
 
-admin.site.register(RequestReview)
-
 admin.site.register(GrantCloseOutDocuments)
 
-admin.site.register(GrantCloseOut)
+@admin.register(TransformedGrantApplicationData)
+class TransformedGrantApplicationDataAdmin(admin.ModelAdmin):
+    list_display = ('user', 'grant')
 
-admin.site.register(Disbursement)
+@admin.register(Requirements)
+class RequirementsAdmin(admin.ModelAdmin):
+    list_display = ('grant_account', 'requested_by', 'request_date', 'items', 'reviewed', 'reviewed_by', 'status')
 
-admin.site.register(FinancialReport)
+@admin.register(Requests)
+class RequestsAdmin(admin.ModelAdmin):
+    list_display = ('user', 'request_type','created_at', 'reviewed')
 
-admin.site.register(FundingAllocation)
+@admin.register(RequestReview)
+class RequestReviewAdmin(admin.ModelAdmin):
+    list_display = ('request', 'reviewer', 'review_date', 'status', 'comments')
 
-admin.site.register(BudgetCategory)
+@admin.register(GrantCloseOut)
+class GrantCloseOutAdmin(admin.ModelAdmin):
+    list_display = ('grant_account', 'initiated_by', 'reason', 'reviewed')
 
-admin.site.register(BudgetItem)
+@admin.register(GrantApplicationReviewDocument)
+class GrantApplicationReviewDocumentAdmin(admin.ModelAdmin):
+    list_display = ('review', 'uploads')
 
-admin.site.register(GrantApplicationResponses)
+@admin.register(GrantApplicationResponses)
+class GrantApplicationResponsesAdmin(admin.ModelAdmin):
+    list_display = ('grant', 'user', 'question', 'answer', 'choices')
 
-admin.site.register(TransformedGrantApplicationData)
+@admin.register(GrantApplicationDocument)
+class GrantApplicationDocumentAdmin(admin.ModelAdmin):
+    list_display = ('application', 'user', 'uploaded_at', 'documents')
 
-admin.site.register(GrantApplicationDocument)
+@admin.register(FundingAllocation)
+class FundingAllocationAdmin(admin.ModelAdmin):
+    list_display = ('grant_account', 'allocation_date', 'reference_number', 'item', 'description', 'amount', 'total_allocated')
 
-admin.site.register(FilteredGrantApplicationResponse)
+@admin.register(FinancialReport)
+class FinancialReportAdmin(admin.ModelAdmin):
+    list_display = ('grant_account', 'report_date', 'fiscal_year', 'report_data', 'created_at', 'review_comments', 'review_status', 'reviewer')
 
+@admin.register(FilteredGrantApplicationResponse)
+class FilteredGrantApplicationResponseAdmin(admin.ModelAdmin):
+    list_display = ('user', 'application', 'question', 'choices')
+
+@admin.register(Extensions)
+class ExtensionsAdmin(admin.ModelAdmin):
+    list_display = ('grant_account', 'requested_by', 'extension_period', 'request_date', 'reviewed', 'reviewed_by')
+
+@admin.register(BudgetCategory)
+class BudgetCategoryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'user', 'description')
+    search_fields = ('name', 'description')
+
+@admin.register(Disbursement)
+class DisbursementAdmin(admin.ModelAdmin):
+    list_display = ('grant_account', 'disbursement_amount', 'disbursement_date', 'budget_balance')
+    
+
+@admin.register(BudgetItem)
+class BudgetItemAdmin(admin.ModelAdmin):
+    list_display = ('user', 'grant_account', 'amount', 'category', 'fiscal_year', 'description')
 
 @admin.register(ProgressReport)
 class ProgressReportAdmin(admin.ModelAdmin):
@@ -76,15 +108,22 @@ class ProgressReportAdmin(admin.ModelAdmin):
 
 @admin.register(GrantAccount)
 class GrantAccountAdmin(admin.ModelAdmin):
-    list_display = ('grant', 'account_holder', 'budget_total',
+    list_display = ('budget_total', 'account_holder',
                     'current_amount', 'status')
     list_filter = ('grant', 'account_holder', 'status')
     search_fields = ('grant__name', 'account_holder')
 
+    def budget_total(self, obj):
+        # Replace this with the actual logic to calculate BudgetTotal
+        return obj.calculate_budget_total()  # Ensure this method exists in GrantAccount
+
+    budget_total.short_description = 'Budget Total'  # Label for the admin
+
+
 
 @admin.register(BudgetTotal)
 class BudgetTotalAdmin(admin.ModelAdmin):
-    list_display = ("grant", "budget_total")
+    list_display = ("grant", "budget_total", "application", "user")
 
 
 @admin.register(Section)
@@ -99,14 +138,14 @@ class SubSectionAdmin(admin.ModelAdmin):
 
 @admin.register(GrantType)
 class GrantTypeAdmin(admin.ModelAdmin):
-    list_display = ("name", "details")
+    list_display = ("name", "details", "is_active")
     search_fields = ("name", "details")
     list_filter = ("name", "details")
 
 
 @admin.register(Donor)
 class DonorAdmin(admin.ModelAdmin):
-    list_display = ("name", "details")
+    list_display = ("name", "details", "is_active")
     search_fields = ("name", "details")
     list_filter = ("name", "details")
 

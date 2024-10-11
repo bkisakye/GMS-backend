@@ -10,17 +10,11 @@ from subgrantees.models import (
     Subcounty
 )
 
-
 @admin.register(SubgranteeProfile)
 class SubgranteeProfileAdmin(admin.ModelAdmin):
-    list_display = (
-        "user",
-        "district",
-        
-        "category",
-    )
-    search_fields = ("district", "contact_person")
-    list_filter = ("district", "category")
+    list_display = ("user", "acronym", "organisation_address", "registration_number")
+    search_fields = ("user", "acronym",)
+    
 
 
 @admin.register(District)

@@ -156,7 +156,7 @@ class SubgranteeProfile(models.Model):
     is_completed = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.organisation_address
+        return self.user.organisation_name
 
 
 class ContractType(models.Model):

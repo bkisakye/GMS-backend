@@ -155,6 +155,7 @@ class GrantSerializer(serializers.ModelSerializer):
 
 
 class BudgetTotalSerializer(serializers.ModelSerializer):
+    grant = GrantSerializer(read_only=True)
     class Meta:
         model = BudgetTotal
         fields = ['id', 'budget_total']

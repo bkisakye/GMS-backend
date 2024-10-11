@@ -633,33 +633,32 @@ class GrantApplicationReviewListCreateAPIView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
     def patch(self, request, pk):
         try:
-            review = GrantApplicationReview.objects.get(pk=pk)
+            review = GrantApplicationReview.objects.select_related(
+                'application').get(pk=pk)
         except GrantApplicationReview.DoesNotExist:
             return Response({'error': 'Review not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # Check if the user has permission to update this review
+        if review.reviewer != request.user and not request.user.is_staff:
+            return Response({'error': "You don't have permission to update this review."},
+                            status=status.HTTP_403_FORBIDDEN)
 
         serializer = GrantApplicationReviewSerializer(
             review, data=request.data, partial=True)
         if serializer.is_valid():
             updated_review = serializer.save()
 
-            # Update the application status and set reviewed to True
+            # Update the application status and set reviewed to True for all cases
             application = updated_review.application
-
-            # Only update the application status if it's different
-            if updated_review.status != application.status:
-                application.status = updated_review.status
-
-            # Assuming you have a 'reviewed' field in GrantApplication
+            application.status = updated_review.status
             application.reviewed = True
-            application.save()
-
+            application.save(update_fields=['status', 'reviewed'])
 
             return Response(serializer.data)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
     def get(self, request):

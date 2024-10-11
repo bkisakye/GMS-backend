@@ -74,6 +74,9 @@ class Grant(models.Model):
     def allocate_budget(self):
         return allocate_budget_for_grant(self)
 
+    def __str__(self):
+        return self.name
+
 
 class Section(models.Model):
     title = models.CharField(max_length=255)
@@ -170,7 +173,7 @@ class GrantApplication(models.Model):
         return signed_percentage
 
 def __str__(self):
-    return f"Application made by {self.subgrantee.organisation_name} for {self.grant.name}"        
+    return f"Application made by {subgrantee.organisation_name} for {grant.name}"        
 
 class GrantApplicationDocument(models.Model):
     application = models.ForeignKey(
@@ -182,7 +185,7 @@ class GrantApplicationDocument(models.Model):
     documents = models.FileField(upload_to='grant_applications/')
 
     def __str__(self):
-        return f"Document for Application {self.application.id} by {self.user.organisation_name}"
+        return f"Document for Application {self.application.grant.name} by {self.user.organisation_name}"
 
 
 class TransformedGrantApplicationData(models.Model):
@@ -215,7 +218,7 @@ class GrantApplicationReviewDocument(models.Model):
     uploads = models.FileField(upload_to='grant_application_reviews/')
 
     def __str__(self):
-        return f"Document for Review {self.review.id}"
+        return f"Document for Review {self.review.application.subgrantee.organisation_name} by {self.review.reviewer.email}"
 
 class FilteredGrantApplicationResponse(models.Model):
     user = models.ForeignKey(
@@ -242,7 +245,7 @@ class BudgetTotal(models.Model):
     budget_total = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
-        return f"Budget Total for Application {self.application.id}"
+        return f"Budget Total for Application {self.grant.name} by {self.user.organisation_name}"
 
 
 class GrantAccount(models.Model):
@@ -709,7 +712,7 @@ class RequestReview(models.Model):
         max_length=20, choices=REVIEW_STATUS_CHOICES, default='pending')
 
     def __str__(self):
-        return f'Review for Request {self.request.id} by {self.reviewer}'
+        return f'Review for Request {self.request.request_type} by {self.reviewer}'
 
 
 class Extensions(models.Model):
