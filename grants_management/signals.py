@@ -498,13 +498,13 @@ def notify_on_disbursement(sender, instance, created, **kwargs):
             subgrantee_html_content = f"""
             <html>
             <body>
-                <h2>Disbursement {action.capitalize()} for Grant: {html.escape(grant_account.grant.name)}</h2>
+                <h2>Disbursement {action.capitalize()} for Funding Opportunity: {html.escape(grant_account.grant.name)}</h2>
                 <p>Dear {html.escape(str(subgrantee_profile))},</p>
                 <p>Your account for the funding opportunity '{html.escape(grant_account.grant.name)}' has been {action}.</p>
                 <h3>Disbursement Details:</h3>
                 <ul>
                     <li><strong>Disbursement Date:</strong> {instance.disbursement_date}</li>
-                    <li><strong>Amount {'Added' if not created else ''}:</strong> {new_amount} UGX</li>
+                    <li><strong>Amount:</strong> {new_amount} UGX</li>
                     <li><strong>Total Disbursed:</strong> {instance.disbursement_amount} UGX</li>
                     <li><strong>Remaining Budget:</strong> {instance.budget_balance} UGX</li>
                 </ul>
