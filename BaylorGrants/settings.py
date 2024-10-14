@@ -4,8 +4,8 @@ from dotenv import load_dotenv
 import os
 from celery.schedules import crontab
 import ldap
-from django_auth_ldap.config import LDAPSearch, GroupOfNamesType
-
+from django_auth_ldap.config import LDAPSearch, GroupOfNamesType, ActiveDirectoryGroupType
+import logging
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(os.path.join(BASE_DIR, ".env"))
@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'authentication',
     # 'django.contrib.messages',
     'notifications',
+    'django_auth_ldap',
     'chats',
 ]
 # CELERY_BROKER_URL = "redis://localhost:6379/0"
@@ -148,15 +149,60 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTHENTICATION_BACKENDS = [
     'authentication.backend.CustomAuthenticationBackend',
+    'django_auth_ldap.backend.LDAPBackend',
     'django.contrib.auth.backends.ModelBackend',
-    # 'django_auth_ldap.backend.LDAPBackend',
+    
 ]
 
 AUTH_USER_MODEL = 'authentication.CustomUser'
+
+
+logger = logging.getLogger('django_auth_ldap')
+logger.addHandler(logging.StreamHandler())
+logger.setLevel(logging.DEBUG)
+
 # LDAP Configuration
-# AUTH_LDAP_SERVER_URI = "ldap://dc01:389"
+AUTH_LDAP_SERVER_URI = "ldap://dc01:389"
 
+#LDAP Bind DN and Password
+AUTH_LDAP_BIND_DN = "Baylor\\forms"
+AUTH_LDAP_BIND_PASSWORD = "GeroWhat12345!"
 
+#LDAP Base DN
+AUTH_LDAP_BASE_DN = "dc=baylor,dc=local"
+
+#LDAP User and Group search
+AUTH_LDAP_USER_SEARCH = LDAPSearch(
+    AUTH_LDAP_BASE_DN,
+    ldap.SCOPE_SUBTREE,
+    "(sAMAccountName=%(user)s)"
+)
+
+#LDAP Group settings
+AUTH_LDAP_GROUP_SEARCH = LDAPSearch(
+    AUTH_LDAP_BASE_DN,
+    ldap.SCOPE_SUBTREE,
+    "(objectClass=group)"
+)
+AUTH_LDAP_GROUP_TYPE =ActiveDirectoryGroupType()
+
+#LDAP attribute mappings
+AUTH_LDAP_USER_ATTR_MAP = {
+    "first_name": "givenName",
+    "last_name": "sn",
+    "email": "mail",
+}
+
+#Use LDAP group membership to determine permissions
+AUTH_LDAP_FIND_GROUP_PERMS = True
+
+#Cache group memberships for an hour to minimize LDAP traffic
+AUTH_LDAP_CACHE_GROUPS = True
+AUTH_LDAP_GROUP_CACHE_TIMEOUT = 3600
+
+#Keep users' LDAP passwords up-to-date
+AUTH_LDAP_ALWAYS_UPDATE_USER = True
+LDAP_DEBUG = True
 
 # JWT Settings
 REST_FRAMEWORK = {
