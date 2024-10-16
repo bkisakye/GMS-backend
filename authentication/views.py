@@ -82,7 +82,7 @@ class LoginUserView(APIView):
                         "email": user.email,
                         "refresh": str(refresh),
                         "access": str(refresh.access_token),
-                        "is_ldap_user": getattr(user, 'is_ldap_user', False),
+                        "is_ldap_user": getattr(user, 'is_ldap_user', True),
                         "organisation_name": user.organisation_name if hasattr(user, 'organisation_name') else None,
                     }
 

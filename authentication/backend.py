@@ -18,8 +18,8 @@ class IntegratedAuthenticationBackend(LDAPBackend):
             # Get attributes safely
             attrs = getattr(ldap_user, 'attrs', {})
             email = attrs.get("mail", [username + "@baylor-uganda.org"])[0]
-            fname = attrs.get("givenName")
-            lname = attrs.get("sn")
+            fname = attrs.get("givenName", [""])[0]
+            lname = attrs.get("sn", [""])[0]
             sam_account_name = attrs.get("sAMAccountName", [username])[0]
 
             if not sam_account_name:
@@ -37,17 +37,16 @@ class IntegratedAuthenticationBackend(LDAPBackend):
                     'is_approved': True,
                     'is_staff': True,
                     'is_active': True,
-                    'is_ldap_user': True
+                    'is_ldap_user': True  # Set the LDAP user flag
                 }
             )
-            
 
             # Update password if needed
             if created or not user.check_password(password):
                 user.set_password(password)
                 user.save()
                 logger.info(
-                    f"{'Created' if created else 'Updated'} user in Django: {user.email}")
+                    f"{'Created' if created else 'Updated'} LDAP user in Django: {user.email}")
 
             return user  # Return the authenticated user
 
@@ -61,10 +60,12 @@ class IntegratedAuthenticationBackend(LDAPBackend):
             user = CustomUser.objects.get(email=username)
             if user.check_password(password):
                 logger.info(f"Local authentication successful for {username}.")
-
+                # Ensure is_ldap_user is False for locally authenticated users
                 if user.is_ldap_user:
                     user.is_ldap_user = False
                     user.save()
+                    logger.info(
+                        f"Updated is_ldap_user to False for {username}.")
                 return user  # Return the authenticated user
             else:
                 logger.warning(
