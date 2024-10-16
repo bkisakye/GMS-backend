@@ -6,6 +6,7 @@ from celery.schedules import crontab
 import ldap
 from django_auth_ldap.config import LDAPSearch, GroupOfNamesType, ActiveDirectoryGroupType
 import logging
+# from authentication.backend import IntegratedAuthenticationBackend
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(os.path.join(BASE_DIR, ".env"))
@@ -18,7 +19,6 @@ SECRET_KEY = 'django-insecure-)u1cm3&rk%j$5#%^n4@on@7rg-z8hjoa$k$_ln8q3)*j!_1r@#
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 
 # Application definition
@@ -148,61 +148,62 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTHENTICATION_BACKENDS = [
-    'authentication.backend.CustomAuthenticationBackend',
-    'django_auth_ldap.backend.LDAPBackend',
+    'authentication.backend.IntegratedAuthenticationBackend',
     'django.contrib.auth.backends.ModelBackend',
-    
+
 ]
 
 AUTH_USER_MODEL = 'authentication.CustomUser'
 
 
 logger = logging.getLogger('django_auth_ldap')
-logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.DEBUG)
+logger.addHandler(logging.StreamHandler())
 
 # LDAP Configuration
-AUTH_LDAP_SERVER_URI = "ldap://dc01:389"
-
-#LDAP Bind DN and Password
+AUTH_LDAP_SERVER_URI = "ldap://10.1.0.4:389"
+# The DN for the service account used for binding
 AUTH_LDAP_BIND_DN = "Baylor\\forms"
-AUTH_LDAP_BIND_PASSWORD = "GeroWhat12345!"
-
-#LDAP Base DN
-AUTH_LDAP_BASE_DN = "dc=baylor,dc=local"
-
-#LDAP User and Group search
+AUTH_LDAP_BIND_PASSWORD = "GeroWhat12345!"  # Ensure this is kept secure
 AUTH_LDAP_USER_SEARCH = LDAPSearch(
-    AUTH_LDAP_BASE_DN,
-    ldap.SCOPE_SUBTREE,
-    "(sAMAccountName=%(user)s)"
+    "dc=baylor,dc=local",  # Base DN for user searches
+    ldap.SCOPE_SUBTREE,  # Search within the subtree
+    "(sAMAccountName=%(user)s)"  # Filter to search by sAMAccountName
 )
 
-#LDAP Group settings
-AUTH_LDAP_GROUP_SEARCH = LDAPSearch(
-    AUTH_LDAP_BASE_DN,
-    ldap.SCOPE_SUBTREE,
-    "(objectClass=group)"
-)
-AUTH_LDAP_GROUP_TYPE =ActiveDirectoryGroupType()
-
-#LDAP attribute mappings
+# Map LDAP attributes to user model fields
 AUTH_LDAP_USER_ATTR_MAP = {
     "first_name": "givenName",
     "last_name": "sn",
     "email": "mail",
+    "organisation_name": "mail",
+    "username": "sAMAccountName"  # Use 'username' if your user model expects this
 }
 
-#Use LDAP group membership to determine permissions
-AUTH_LDAP_FIND_GROUP_PERMS = True
+# Group configuration
+# Adjust this if you have a different group type
+AUTH_LDAP_GROUP_TYPE = GroupOfNamesType()
+AUTH_LDAP_MIRROR_GROUPS = True  # Mirror LDAP groups to Django groups
 
-#Cache group memberships for an hour to minimize LDAP traffic
-AUTH_LDAP_CACHE_GROUPS = True
-AUTH_LDAP_GROUP_CACHE_TIMEOUT = 3600
+# Make sure your group search base DN is correct; it seems you have a typo in "0u=groups"
+AUTH_LDAP_GROUP_SEARCH = LDAPSearch(
+    "dc=baylor,dc=local",  # Correct the typo here to 'ou=groups'
+    ldap.SCOPE_SUBTREE,
+    # Adjust if you are using a different object class
+    "(objectClass=group)"
+)
 
-#Keep users' LDAP passwords up-to-date
+# Settings for user updates and bind behavior
+# Update user info in Django from LDAP on login
 AUTH_LDAP_ALWAYS_UPDATE_USER = True
-LDAP_DEBUG = True
+AUTH_LDAP_BIND_AS_USER = True  # Bind as the user during authentication
+
+# AUTH_LDAP_USER_FLAGS_BY_GROUP = {
+#     "is_active": "CN=AllUsers,OU=Groups,DC=baylor,DC=local",
+#     "is_staff": "CN=AllUsers,OU=Groups,DC=baylor,DC=local",
+#     "is_approved": "CN=ActiveUsers, OU=Groups, DC=baylor, DC=local"
+# }
+
 
 # JWT Settings
 REST_FRAMEWORK = {
@@ -210,7 +211,7 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 10,  
+    'PAGE_SIZE': 10,
 }
 
 SIMPLE_JWT = {

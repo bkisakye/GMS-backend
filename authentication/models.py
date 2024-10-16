@@ -11,6 +11,21 @@ import os
 from subgrantees.models import SubgranteeProfile
 
 
+from django.db import models
+
+
+class LDAPUser(models.Model):
+    ldap_username = models.CharField(max_length=255, unique=True)
+    distinguished_name = models.CharField(max_length=255, unique=True)
+    email = models.EmailField(max_length=255, unique=True)
+    first_name = models.CharField(max_length=30, blank=True, null=True)
+    last_name = models.CharField(max_length=30, blank=True, null=True)
+    last_sync = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"LDAP User: {self.ldap_username}"
+
+
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
@@ -26,6 +41,7 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
         extra_fields.setdefault("is_approved", True)
+        extra_fields.setdefault("organisation_name", "Baylor Uganda")
 
         if extra_fields.get("is_staff") is not True:
             raise ValueError("Superuser must have is_staff=True.")
@@ -44,11 +60,38 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     lname = models.CharField(max_length=30)
     organisation_name = models.CharField(max_length=100, blank=True, null=True)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
-    subgranteeprofile = models.OneToOneField(SubgranteeProfile, on_delete=models.CASCADE, null=True, blank=True, related_name='user_profile')
+    subgranteeprofile = models.OneToOneField(
+        SubgranteeProfile, on_delete=models.CASCADE, null=True, blank=True, related_name='user_profile'
+    )
+    is_ldap_user = models.BooleanField(default=False)
     objects = CustomUserManager()
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
+
+    def get_group_permissions(self, obj=None):
+        permissions = super().get_group_permissions(obj)
+        if self.ldap_user is not None:  # Check if ldap_user is not None
+            try:
+                ldap_permissions = self.ldap_user.get_group_permissions(
+                    obj)  # Pass obj to get_group_permissions if needed
+                permissions.update(ldap_permissions)
+            except AttributeError:
+                # Log this error or handle it as appropriate for your application
+                pass
+        return permissions
+
+    def get_all_permissions(self, obj=None):
+        permissions = super().get_all_permissions(obj)
+        if self.ldap_user is not None:  # Check if ldap_user is not None
+            try:
+                ldap_permissions = self.ldap_user.get_all_permissions(
+                    obj)  # Pass obj to get_all_permissions if needed
+                permissions.update(ldap_permissions)
+            except AttributeError:
+                # Log this error or handle it as appropriate for your application
+                pass
+        return permissions
 
     groups = models.ManyToManyField(
         "auth.Group",
@@ -102,11 +145,6 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 class UserProfile(models.Model):
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
-
-
-class LDAPUser(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
-    ldap_username = models.CharField(max_length=255, unique=True)
 
 
 class Activation(models.Model):

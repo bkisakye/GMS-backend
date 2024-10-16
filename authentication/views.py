@@ -1,3 +1,4 @@
+from django_auth_ldap.backend import LDAPBackend
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -6,16 +7,12 @@ from django.core.mail import send_mail
 from django.conf import settings
 from notifications.models import Notification
 from .serializers import AuthSerializer, LoginSerializer, GranteeSignupSerializer, CustomUserSerializer
-from .models import CustomUser
 import logging
-from subgrantees.models import SubgranteeProfile
-from rest_framework.decorators import api_view
 from rest_framework import status, permissions
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.permissions import IsAdminUser
 from rest_framework.decorators import api_view, permission_classes
 
 logger = logging.getLogger(__name__)
+CustomUser = get_user_model()
 
 
 class AuthenticateUser(APIView):
@@ -31,63 +28,75 @@ class AuthenticateUser(APIView):
             password = serializer.validated_data["password"]
             user = authenticate(request, username=username, password=password)
 
-            if user is not None:
+            if user:
+                logger.info(f"User {username} authenticated successfully.")
                 return Response(
                     {"message": "User authenticated",
                         "username": user.get_username()},
                     status=status.HTTP_200_OK,
                 )
-            else:
-                return Response(
-                    {"message": "Invalid credentials"},
-                    status=status.HTTP_401_UNAUTHORIZED,
-                )
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            logger.warning(
+                f"Failed login attempt for user: {username}. Invalid credentials.")
+            return Response(
+                {"message": "Invalid credentials"},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class LoginUserView(APIView):
-    """
-    API endpoint for logging in users using email and password.
-    """
-
     def post(self, request, *args, **kwargs):
         serializer = LoginSerializer(data=request.data)
         if serializer.is_valid():
             email = serializer.validated_data["email"]
             password = serializer.validated_data["password"]
-            user = authenticate(request, email=email, password=password)
+
+            # Extract username from email for LDAP authentication
+            username = email.split('@')[0]
+
+            # Try LDAP authentication first
+            user = authenticate(request, username=username, password=password)
+
+            if user is None:
+                # If LDAP fails, try local authentication
+                user = authenticate(request, email=email, password=password)
 
             if user:
-                if user.is_active and user.is_staff:
-                    # Admin login
+                # Log user data after authentication
+                logger.debug(
+                    f"Authenticated user: {user.email}, fname: {user.fname}, lname: {user.lname}, is_ldap_user: {user.is_ldap_user}")
+
+                if user.is_active:
+                    # Check if user is approved (for subgrantees)
+                    if hasattr(user, 'is_approved') and not user.is_approved:
+                        logger.warning(
+                            f"Unapproved user tried to log in: {email}.")
+                        return Response({"error": "Account not approved yet."}, status=status.HTTP_401_UNAUTHORIZED)
+
+                    # Generate JWT tokens
                     refresh = RefreshToken.for_user(user)
-                    return Response(
-                        {
-                            "organisation_name": user.organisation_name,
-                            "user_id": user.id,  
-                            "refresh": str(refresh),
-                            "access": str(refresh.access_token),
-                        },
-                        status=status.HTTP_200_OK,
-                    )
-                elif user.is_active and hasattr(user, 'is_approved') and user.is_approved:
-                    # Grantee login
-                    refresh = RefreshToken.for_user(user)
-                    return Response(
-                        {
-                            "organisation_name": user.organisation_name,
-                            "user_id": user.id,  # Include user ID
-                            "refresh": str(refresh),
-                            "access": str(refresh.access_token),
-                        },
-                        status=status.HTTP_200_OK,
-                    )
-            return Response(
-                {"error": "Invalid credentials or account not activated/approved."},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
+
+                    # Prepare response data
+                    response_data = {
+                        "user_id": user.id,
+                        "email": user.email,
+                        "refresh": str(refresh),
+                        "access": str(refresh.access_token),
+                        "is_ldap_user": getattr(user, 'is_ldap_user', False),
+                        "organisation_name": user.organisation_name if hasattr(user, 'organisation_name') else None,
+                    }
+
+                    return Response(response_data, status=status.HTTP_200_OK)
+
+                logger.warning(f"Inactive user tried to log in: {email}.")
+                return Response({"error": "Account not activated."}, status=status.HTTP_401_UNAUTHORIZED)
+
+            logger.warning(f"Invalid credentials for email: {email}.")
+            return Response({"error": "Invalid credentials."}, status=status.HTTP_401_UNAUTHORIZED)
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 
 class GranteeSignupView(APIView):
@@ -102,34 +111,28 @@ class GranteeSignupView(APIView):
 
             # Check if the email already exists
             if CustomUser.objects.filter(email=email).exists():
+                logger.warning(f"Email already in use: {email}.")
                 return Response(
                     {"error": "Email already in use."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            fname = serializer.validated_data["fname"]
-            lname = serializer.validated_data["lname"]
-            password = serializer.validated_data["password"]
-            organisation_name = serializer.validated_data["organisation_name"]
-            phone_number = serializer.validated_data["phone_number"]
-
             # Create a new CustomUser instance with is_approved set to False
             user = CustomUser.objects.create_user(
                 email=email,
-                password=password,
-                fname=fname,
-                lname=lname,
-                organisation_name=organisation_name,
-                phone_number=phone_number,
-                is_approved=None,
+                password=serializer.validated_data["password"],
+                fname=serializer.validated_data["fname"],
+                lname=serializer.validated_data["lname"],
+                organisation_name=serializer.validated_data["organisation_name"],
+                phone_number=serializer.validated_data["phone_number"],
+                is_approved=False,
             )
 
-            # Send an email to the grantee
-            user.send_pending_approval_email()
-
-            # Notify the admin
-            # SubgranteeProfile.objects.create(user=user)
-            # self.notify_admin(user)
+            try:
+                user.send_pending_approval_email()
+                logger.info(f"Pending approval email sent to: {email}.")
+            except Exception as e:
+                logger.error(f"Error sending email to {email}: {e}")
 
             return Response(
                 {"message": "Signup request received. Please wait for admin approval."},
@@ -137,22 +140,26 @@ class GranteeSignupView(APIView):
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 @api_view(['GET'])
 def get_subgrantees_count(request):
-    subgrantees_count = CustomUser.objects.filter(is_staff=False).count()
-    return Response({"count": subgrantees_count})
+    count = CustomUser.objects.filter(is_staff=False).count()
+    return Response({"count": count})
+
 
 @api_view(['GET'])
 def get_active_subgrantees_count(request):
-    active_subgrantees_count = CustomUser.objects.filter(is_staff=False, is_approved=True).count()
-    return Response({"count": active_subgrantees_count})
+    count = CustomUser.objects.filter(is_staff=False, is_approved=True).count()
+    return Response({"count": count})
+
 
 @api_view(['GET'])
 @permission_classes([permissions.IsAdminUser])
 def get_all_subgrantees(request):
     subgrantees = CustomUser.objects.filter(is_staff=False)
     serializer = CustomUserSerializer(subgrantees, many=True)
-    return Response(serializer.data) 
+    return Response(serializer.data)
+
 
 class AdminApprovalView(APIView):
     def post(self, request, *args, **kwargs):
@@ -174,12 +181,12 @@ class AdminApprovalView(APIView):
         if approve:
             user.is_approved = True
             user.save()
-            user.send_welcome_email()
+            user.send_welcome_email()  # Consider catching exceptions here too
+            logger.info(f"Grantee approved: {email}.")
             return Response(
                 {"message": "Grantee approved and notified."}, status=status.HTTP_200_OK
             )
         else:
-            # Optionally, handle rejection
             send_mail(
                 "Registration Rejected",
                 "We regret to inform you that your registration has been rejected.",
@@ -187,10 +194,12 @@ class AdminApprovalView(APIView):
                 [user.email],
                 fail_silently=False,
             )
+            logger.info(f"Grantee rejected: {email}.")
 
         return Response(
             {"message": "Grantee status updated."}, status=status.HTTP_200_OK
         )
+
 
 @api_view(['DELETE'])
 @permission_classes([permissions.IsAdminUser])
@@ -198,6 +207,8 @@ def delete_subgrantee(request, user_id):
     try:
         user = CustomUser.objects.get(id=user_id)
         user.delete()
+        logger.info(f"Subgrantee deleted successfully: {user_id}.")
         return Response({"message": "Subgrantee deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
     except CustomUser.DoesNotExist:
+        logger.error(f"Subgrantee not found: {user_id}.")
         return Response({"error": "Subgrantee not found."}, status=status.HTTP_404_NOT_FOUND)

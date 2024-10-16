@@ -22,7 +22,7 @@ def test_network_connectivity(port):
         return False
 
 
-def test_ldap_connection(use_ssl=False):
+def test_ldap_connection(search_attribute, search_value, use_ssl=False):
     port = LDAPS_PORT if use_ssl else LDAP_PORT
     if not test_network_connectivity(port):
         return False
@@ -35,9 +35,10 @@ def test_ldap_connection(use_ssl=False):
         print(
             f"Successfully connected to the LDAP server {'with SSL' if use_ssl else 'without SSL'}")
 
-        # Attempt a search operation
-        conn.search(BASE_DN, '(objectClass=person)',
-                    attributes=['cn', 'sn', 'mail'])
+        # Create the search filter based on the attribute and value provided
+        search_filter = f"({search_attribute}={search_value})"
+        conn.search(BASE_DN, search_filter, attributes=['cn', 'sn', 'mail'])
+
         if len(conn.entries) > 0:
             print(f"Successfully retrieved {len(conn.entries)} entries.")
             print("First entry details:")
@@ -55,7 +56,11 @@ def test_ldap_connection(use_ssl=False):
 
 
 if __name__ == "__main__":
+    search_attribute = input(
+        "Enter the attribute to search by (sAMAccountName or mail): ")
+    search_value = input(f"Enter the value for {search_attribute}: ")
+
     print("Attempting non-SSL connection:")
-    if not test_ldap_connection():
+    if not test_ldap_connection(search_attribute, search_value):
         print("\nAttempting SSL connection:")
-        test_ldap_connection(use_ssl=True)
+        test_ldap_connection(search_attribute, search_value, use_ssl=True)
