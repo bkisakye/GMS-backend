@@ -178,6 +178,7 @@ AUTH_LDAP_USER_ATTR_MAP = {
     "email": "mail",
     "organisation_name": "sAMAccountName",
     "username": "sAMAccountName"  # Use 'username' if your user model expects this
+    
 }
 
 # Group configuration

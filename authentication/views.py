@@ -97,8 +97,6 @@ class LoginUserView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
 class GranteeSignupView(APIView):
     """
     API endpoint for grantee sign-up.

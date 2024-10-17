@@ -267,17 +267,20 @@ class GrantApplicationSerializer(serializers.ModelSerializer):
 
 
 class GrantApplicationReviewSerializer(serializers.ModelSerializer):
+    reviewer = CustomUserSerializer(read_only=True)
     class Meta:
         model = GrantApplicationReview
+
         fields = ['score', 'status', 'comments', 'application', 'reviewer', 'id']
 
 
     def create(self, validated_data):
         request = self.context.get('request')
         if request and hasattr(request, 'user'):
-            print("Setting reviewer:", request.user)  # Debug print
             validated_data['reviewer'] = request.user
+            print("Reviewer set in validated_data:", validated_data)  # Debug
         return super().create(validated_data)
+
 
     def validate(self, data):
         print("Validated data:", data)  # Add this line to debug
