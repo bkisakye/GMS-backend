@@ -1,0 +1,13 @@
+Subject: Progress Report Reminder for {{ grant.name }}
+
+Dear {{ user.organisation_name }},
+
+This is a friendly reminder that your progress report for the grant titled "{{ grant.name }}" is due on {{ next_report_date.strftime('%Y-%m-%d') }}.
+
+Please make sure to submit your report by this date. If you have already submitted your report, you can disregard this reminder.
+
+Thank you for your cooperation!
+
+Best regards,
+[Your Organization Name]
+[Your Organization Contact Information]

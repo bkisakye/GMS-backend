@@ -7,6 +7,7 @@ from datetime import timedelta
 from decimal import Decimal
 from django.core.management import call_command
 from notifications.models import Notification
+from grants_management.utilis import report_reminders
 
 
 logger = logging.getLogger(__name__)
@@ -133,60 +134,8 @@ def generate_financial_report(grant_account, end_date):
 
 @shared_task
 def send_report_reminders():
-    now = timezone.now()
-    reminder_window = now + timedelta(days=1)
-
-    accounts_due_for_reports = GrantAccount.objects.filter(
-        grant__reporting_time__in=['monthly',
-                                   'quarterly', 'annually', 'weekly'],
-        grant__end_date__gte=now.date(),
-        status='active'
-    ).select_related('grant', 'account_holder')
-
-    reminders_sent = 0
-
-    for account in accounts_due_for_reports:
-        user = account.account_holder
-        grant = account.grant
-
-        # Calculate the next reporting date based on the grant's reporting time
-        if grant.reporting_time == 'monthly':
-            next_report_date = (now.replace(day=1) +
-                                timedelta(days=32)).replace(day=1)
-        elif grant.reporting_time == 'quarterly':
-            next_report_date = (now.replace(day=1) +
-                                timedelta(days=93)).replace(day=1)
-        elif grant.reporting_time == 'annually':
-            next_report_date = now.replace(year=now.year + 1, month=1, day=1)
-        elif grant.reporting_time == 'weekly':
-            next_report_date = now + timedelta(days=(7 - now.weekday()))
-        else:
-            continue  # Skip if reporting time is not recognized
-
-        # Check if the next report date is within the reminder window
-        if now.date() <= next_report_date.date() <= reminder_window.date():
-            notification = Notification.objects.create(
-                notification_category='reminders',
-                notification_type='grantee',
-                text=f"Reminder: Your progress report for grant '{grant.name}' is due on {next_report_date.strftime('%Y-%m-%d')}.",
-            )
-            notification.user.add(user)
-
-            try:
-                send_mail(
-                    'Progress Report Reminder',
-                    f"Dear {user.organisation_name},\n\nThis is a reminder that your progress report for the grant '{grant.name}' is due on {next_report_date.strftime('%Y-%m-%d')}. Please ensure it is submitted on time.\n\nBest regards,\nGrant Management Team",
-                    settings.DEFAULT_FROM_EMAIL,
-                    [user.email],
-                    fail_silently=False,
-                )
-                reminders_sent += 1
-            except Exception as e:
-                logger.error(f"Failed to send email to {user.email}: {str(e)}")
-
-    logger.info(
-        f"Reminder process completed. Sent {reminders_sent} reminders out of {accounts_due_for_reports.count()} active grant accounts.")
-    return f"Reminder process completed. Sent {reminders_sent} reminders out of {accounts_due_for_reports.count()} active grant accounts."
+    reminders_sent, total_accounts = process_report_reminders()
+    return f"Reminder process completed. Sent {reminders_sent} reminders out of {total_accounts} active grant accounts."
 
 
 @shared_task

@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'notifications',
     'django_auth_ldap',
     'chats',
+    'reminders',
 ]
 # CELERY_BROKER_URL = "redis://localhost:6379/0"
 CELERY_BROKER_URL = "redis://default:WcElpfpUKvjmBCpMCEXoBFEZkNuZdNCT@viaduct.proxy.rlwy.net:21260"
