@@ -33,4 +33,8 @@ app.conf.beat_schedule = {
         'task' : "grants_management.tasks.send_report_reminders",
         'schedule': crontab(minute=0, hour=9),
     },
+    "send-disbursement-reminders": {
+        'task' : "grants_management.tasks.send_disbursement_reminders",
+        'schedule' : crontab(minute=0, hour=0),
+    },
 }

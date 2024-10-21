@@ -7,7 +7,7 @@ from datetime import timedelta
 from decimal import Decimal
 from django.core.management import call_command
 from notifications.models import Notification
-from grants_management.utilis import report_reminders
+from grants_management.utilis import report_reminders, disbursement_reminders
 
 
 logger = logging.getLogger(__name__)
@@ -138,53 +138,11 @@ def send_report_reminders():
     return f"Reminder process completed. Sent {reminders_sent} reminders out of {total_accounts} active grant accounts."
 
 
-@shared_task
-def create_disbursement_reminders():
-    logger.info("Starting disbursement reminder task.")
-    now = timezone.now()
+@shared_task  # Mark this function as a Celery task
+def send_disbursement_reminders():
+    reminders_sent = send_disbursement_reminders()
+    return f"Reminder process completed. Sent {reminders_sent} reminders"
 
-    # Fetch accounts with disbursements where the budget balance is greater than 0
-    accounts_with_disbursements = Disbursement.objects.values('grant_account').annotate(
-        total_disbursed=Sum('disbursement_amount'),
-        budget_balance=F(
-            'grant_account__budget_total__budget_total') - Sum('disbursement_amount')
-    ).filter(
-        budget_balance__gt=0  # Budget balance should not be zero
-    )
+    
 
-    reminders_sent = 0
 
-    for account in accounts_with_disbursements:
-        grant_account_id = account['grant_account']
-        total_disbursed_amount = account['total_disbursed']
-        budget_total_amount = GrantAccount.objects.get(
-            id=grant_account_id).budget_total.budget_total
-
-        # Check if the total disbursed amount is not equal to the budget total
-        if total_disbursed_amount != budget_total_amount:
-            for admin in User.objects.filter(is_staff=True):
-                # Create a notification for the admin
-                notification = Notification.objects.create(
-                    notification_category='reminders',
-                    notification_type='admin',
-                    text=f"Reminder: The account '{grant_account_id}' has pending balances. Please remember to process disbursement for the account.",
-                )
-                notification.user.add(admin)
-
-                # Send an email to the admin
-                try:
-                    send_mail(
-                        'Disbursement Reminder',
-                        f"Dear {admin.organisation_name},\n\nThis is a reminder that the account '{grant_account_id}' has pending balances. Please remember to process disbursement for the account.\n\nBest regards,\nGrant Management Team",
-                        settings.DEFAULT_FROM_EMAIL,
-                        [admin.email],
-                        fail_silently=False,
-                    )
-                    reminders_sent += 1
-                except Exception as e:
-                    logger.error(
-                        f"Failed to send email to {admin.email}: {str(e)}")
-
-    logger.info(
-        f"Disbursement reminder process completed. Sent {reminders_sent} reminders.")
-    return f"Disbursement reminder process completed. Sent {reminders_sent} reminders."

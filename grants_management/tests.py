@@ -1,63 +1,40 @@
+import time
 from django.test import TestCase
-from django.core import mail
-from unittest.mock import patch
-from grants_management.models import GrantAccount, Disbursement
-from notifications.models import Notification
-from grants_management.tasks import create_disbursement_reminders
-# Import to get the custom user model
-from django.contrib.auth import get_user_model
-from decimal import Decimal
+from authentication.models import CustomUser
+from grants_management.models import GrantAccount, Disbursement, Notification
+# Replace 'myapp' with the actual app name
+from grants_management.tasks import send_disbursement_reminders
 
 
-class DisbursementReminderTaskTests(TestCase):
+class DisbursementReminderTest(TestCase):
+
     def setUp(self):
-        # Get the custom user model
-        CustomUser = get_user_model()
-
-        # Create a user (admin) using only the email and password
-        self.admin_user = CustomUser.objects.create_user(
-            email='admin@example.com',  # Only use email
-            password='password'
-        )
-
-        # Create a GrantAccount
+        # Create test data: Admin user and GrantAccount
+        self.admin = CustomUser.objects.create(
+            email='admin@example.com', is_staff=True)
         self.grant_account = GrantAccount.objects.create(
-            admin=self.admin_user  # Assuming the GrantAccount has an admin field
+            account_holder=self.admin,  # Replace with the appropriate fields
+            budget_total=10000
         )
+        Disbursement.objects.create(
+            grant_account=self.grant_account, disbursement_amount=5000)
 
-        # Create a Disbursement linked to the GrantAccount
-        self.disbursement = Disbursement.objects.create(
-            grant_account=self.grant_account,
-            disbursement_amount=Decimal('1000.00'),  # Example value
-            # Set other fields as needed
-        )
+    def test_async_disbursement_reminder_task(self):
+        # Trigger the Celery task asynchronously
+        task = send_disbursement_reminders.delay()
 
-        # Set a budget total (assumed to be related to grant_account)
-        self.grant_account.budget_total.budget_total = Decimal('1500.00')
-        self.grant_account.budget_total.save()
+        # Wait for the task to complete
+        while not task.ready():
+            time.sleep(1)  # Check task status every second
 
-    @patch('grants_management.tasks.send_mail')  # Mock send_mail
-    def test_create_disbursement_reminders(self, mock_send_mail):
-        # Call the task
-        result = create_disbursement_reminders()
+        # Assert that the task completed successfully
+        self.assertEqual(task.status, 'SUCCESS')
 
-        # Check if a notification was created
-        notifications = Notification.objects.filter(
-            notification_category='reminders')
+        # Assert that a Notification was created for the admin
+        notifications = Notification.objects.filter(user=self.admin)
         self.assertEqual(notifications.count(), 1)
 
-        # Check if the email was sent
-        self.assertEqual(mock_send_mail.call_count, 1)
-
-        # Verify the email content
-        self.assertIn("Reminder: The account",
-                      mock_send_mail.call_args[0][1])  # Subject
-        self.assertIn(str(self.grant_account.id),
-                      mock_send_mail.call_args[0][1])  # Body content
-
-        # Check the result of the task
-        self.assertIn("Sent 1 reminders", result)
-
-    def tearDown(self):
-        # Clean up the test data if needed
-        pass
+        # Check that an email was sent to the admin
+        from django.core.mail import outbox
+        self.assertEqual(len(outbox), 1)
+        self.assertIn(self.admin.email, outbox[0].to)
