@@ -11,9 +11,11 @@ app = Celery("BaylorGrants")
 app.config_from_object("django.conf:settings", namespace="CELERY")
 app.autodiscover_tasks(lambda: settings.INSTALLED_APPS)
 
+
 @app.task(bind=True)
 def debug_task(self):
     print(f"Request: {self.request!r}")
+
 
 app.conf.beat_schedule = {
     "deactivate-expired-grants": {
@@ -30,11 +32,15 @@ app.conf.beat_schedule = {
         "schedule": crontab(0, 0, day_of_month='1'),
     },
     "send-report-reminders": {
-        'task' : "grants_management.tasks.send_report_reminders",
+        'task': "grants_management.tasks.send_report_reminders",
         'schedule': crontab(minute=0, hour=9),
     },
-    "send-disbursement-reminders": {
-        'task' : "grants_management.tasks.send_disbursement_reminders",
-        'schedule' : crontab(minute=0, hour=0),
+    "send-disbursement-reminders_task": {
+        'task': "grants_management.tasks.send_disbursement_reminders_task",
+        'schedule': crontab(minute=0, hour=0),
+    },
+    "send_subgrantee_reminders_task": {
+        'task': "grants_management.tasks.send_subgrantee_reminders_task",
+        'schedule': crontab(minute=0, hour=0),
     },
 }

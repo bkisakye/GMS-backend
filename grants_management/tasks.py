@@ -7,7 +7,9 @@ from datetime import timedelta
 from decimal import Decimal
 from django.core.management import call_command
 from notifications.models import Notification
-from grants_management.utilis import report_reminders, disbursement_reminders
+from grants_management.utilis.report_reminders import process_report_reminders
+from grants_management.utilis.subgrantess_reminders import send_subgrantee_reminders
+from grants_management.utilis.disbursement_reminders import send_disbursement_reminders
 
 
 logger = logging.getLogger(__name__)
@@ -139,10 +141,14 @@ def send_report_reminders():
 
 
 @shared_task  # Mark this function as a Celery task
-def send_disbursement_reminders():
+def send_disbursement_reminders_task():
     reminders_sent = send_disbursement_reminders()
     return f"Reminder process completed. Sent {reminders_sent} reminders"
 
     
-
+@shared_task
+def send_subgrantee_reminders_task():
+    # Call the utility function directly
+    reminders_sent = send_subgrantee_reminders()
+    return reminders_sent
 
