@@ -687,6 +687,7 @@ class Requirements(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name='reviewed_requirements')
     reviewed = models.BooleanField(default=False)
     review_date = models.DateTimeField(null=True, blank=True)
+    docs = models.FileField(upload_to='requirements_docs/', blank=True, null=True)
 
     def __str__(self):
         return f"Requirement for {self.grant_account} requested by {self.requested_by}"

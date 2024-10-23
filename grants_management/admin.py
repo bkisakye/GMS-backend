@@ -42,7 +42,7 @@ class TransformedGrantApplicationDataAdmin(admin.ModelAdmin):
 
 @admin.register(Requirements)
 class RequirementsAdmin(admin.ModelAdmin):
-    list_display = ('grant_account', 'requested_by', 'request_date', 'items', 'reviewed', 'reviewed_by', 'status')
+    list_display = ('grant_account', 'requested_by', 'request_date', 'items', 'docs', 'reviewed_by', 'status')
 
 @admin.register(Requests)
 class RequestsAdmin(admin.ModelAdmin):

@@ -136,7 +136,7 @@ def generate_financial_report(grant_account, end_date):
 
 @shared_task
 def send_report_reminders():
-    reminders_sent, total_accounts = process_report_reminders()
+    reminders_sent, total_accounts, next_report_dates = process_report_reminders()
     return f"Reminder process completed. Sent {reminders_sent} reminders out of {total_accounts} active grant accounts."
 
 
