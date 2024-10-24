@@ -174,11 +174,16 @@ AUTH_LDAP_USER_SEARCH = LDAPSearch(
 
 # Map LDAP attributes to user model fields
 AUTH_LDAP_USER_ATTR_MAP = {
-    "first_name": "givenName",
-    "last_name": "sn",
-    "email": "mail",
-    "organisation_name": "sAMAccountName",
-    "username": "sAMAccountName"  # Use 'username' if your user model expects this
+    # "first_name": "givenName",
+    # "last_name": "sn",
+    'full_name': "cn",
+    'username': "sAMAccountName",
+    'email': "mail",
+    'fname' : "givenName",
+    'lname' : "sn",
+    # "email": "mail",
+    # "organisation_name": "OU",
+    # "username": "sAMAccountName"  # Use 'username' if your user model expects this
     
 }
 
