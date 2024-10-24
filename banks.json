@@ -1,0 +1,104 @@
+{
+  "banks": [
+    {
+      "name": "Access Bank Uganda",
+      "head_office": "Plot 2/4, Jinja Road, Kampala, Uganda",
+      "website": "https://www.accessbank.co.ug",
+      "year_of_establishment": 2008,
+      "contact_info": {
+        "phone": "+256 414 233 200",
+        "email": "info@accessbank.co.ug"
+      }
+    },
+    {
+      "name": "Absa Bank Uganda Limited",
+      "head_office": "Plot 16 Kampala Road, Kampala, Uganda",
+      "website": "https://www.absa.co.ug",
+      "year_of_establishment": 1927,
+      "contact_info": {
+        "phone": "+256 414 258 258",
+        "email": "uganda@absa.africa"
+      }
+    },
+    {
+      "name": "Bank of Africa Uganda Limited",
+      "head_office": "Plot 45 Jinja Road, Kampala, Uganda",
+      "website": "https://www.boauganda.com",
+      "year_of_establishment": 1985,
+      "contact_info": {
+        "phone": "+256 414 305 000",
+        "email": "info@boauganda.com"
+      }
+    },
+    {
+      "name": "Bank of Baroda Uganda Limited",
+      "head_office": "Plot 18 Kampala Road, Kampala, Uganda",
+      "website": "https://www.bankofbaroda.ug",
+      "year_of_establishment": 1953,
+      "contact_info": {
+        "phone": "+256 414 233 680",
+        "email": "bobug@bankofbaroda.com"
+      }
+    },
+    {
+      "name": "Stanbic Bank Uganda Limited",
+      "head_office": "Plot 17, Hannington Road, Kampala, Uganda",
+      "website": "https://www.stanbicbank.co.ug",
+      "year_of_establishment": 1906,
+      "contact_info": {
+        "phone": "+256 312 224 600",
+        "email": "customercare@stanbic.com"
+      }
+    },
+    {
+      "name": "Equity Bank Uganda Limited",
+      "head_office": "Plot 390 Mutesa II Road, Wandegeya, Kampala, Uganda",
+      "website": "https://www.equitybank.co.ug",
+      "year_of_establishment": 2008,
+      "contact_info": {
+        "phone": "+256 312 262 340",
+        "email": "info@equitybank.co.ug"
+      }
+    },
+    {
+      "name": "DFCU Bank",
+      "head_office": "Plot 26 Kyadondo Road, Kampala, Uganda",
+      "website": "https://www.dfcugroup.com",
+      "year_of_establishment": 1964,
+      "contact_info": {
+        "phone": "+256 312 300 200",
+        "email": "customercare@dfcugroup.com"
+      }
+    },
+    {
+      "name": "Standard Chartered Uganda",
+      "head_office": "Plot 5 Speke Road, Kampala, Uganda",
+      "website": "https://www.sc.com/ug",
+      "year_of_establishment": 1912,
+      "contact_info": {
+        "phone": "+256 414 258 211",
+        "email": "customer.care@sc.com"
+      }
+    },
+    {
+      "name": "Cairo Bank Uganda",
+      "head_office": "Plot 17-21, Hannington Road, Kampala, Uganda",
+      "website": "https://www.cbu.co.ug",
+      "year_of_establishment": 1995,
+      "contact_info": {
+        "phone": "+256 414 256 070",
+        "email": "info@cbu.co.ug"
+      }
+    },
+    {
+      "name": "United Bank for Africa",
+      "head_office": "Plot 2, Jinja Road, Kampala, Uganda",
+      "website": "https://www.ubauganda.com",
+      "year_of_establishment": 2008,
+      "contact_info": {
+        "phone": "+256 414 232 930",
+        "email": "uganda@ubagroup.com"
+      }
+    }
+  ]
+}

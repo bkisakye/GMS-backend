@@ -33,6 +33,17 @@ class County(models.Model):
         return self.name
 
 
+class Bank(models.Model):
+    name = models.CharField(max_length=255)
+    head_office = models.CharField(max_length=255)
+    website = models.URLField()
+    year_of_establishment = models.IntegerField()
+    # This can store structured data as in your JSON
+    contact_info = models.JSONField()
+
+    def __str__(self):
+        return self.name
+
 class Subcounty(models.Model):
     name = models.CharField(max_length=255)
     county = models.ForeignKey(County, on_delete=models.SET_NULL, null=True)

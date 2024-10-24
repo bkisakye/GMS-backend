@@ -7,8 +7,15 @@ from subgrantees.models import (
     District,
     SubgranteeCategory,
     SubgranteeProfile,
-    Subcounty
+    Subcounty,
+    Bank
 )
+
+@admin.register(Bank)
+class BankAdmin(admin.ModelAdmin):
+    list_display = ("name", "head_office", "contact_info", "website", "year_of_establishment")
+    search_fields = ("name", )
+    list_filter = ("name",)
 
 @admin.register(SubgranteeProfile)
 class SubgranteeProfileAdmin(admin.ModelAdmin):
